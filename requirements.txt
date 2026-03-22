@@ -1,0 +1,7 @@
+fastapi
+yfinance
+pandas
+numpy
+plotly
+jinja2
+requests
