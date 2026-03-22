@@ -2,29 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VibeTrade Pro | Live AI</title>
+    <title>Vantedge | AI Market Intelligence</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 100vh; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 100vh; overflow-x: hidden; }
+        
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.02); 
+            backdrop-filter: blur(30px); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .glass-card:hover { 
+            transform: translateY(-10px) scale(1.01);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.1);
+        }
+
         .neon-green { text-shadow: 0 0 15px rgba(0, 255, 187, 0.5); color: #00ffbb; }
         .neon-red { text-shadow: 0 0 15px rgba(255, 51, 102, 0.5); color: #ff3366; }
+        
+        input::placeholder { color: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body class="p-6 md:p-12">
     <div class="max-w-7xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
-            <h1 class="text-2xl font-black italic tracking-tighter uppercase">Vibe<span class="text-emerald-400">Trade</span></h1>
+            <h1 class="text-2xl font-black italic tracking-tighter uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
             <div class="relative w-full md:w-96">
-                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" placeholder="Search (AAPL, BTC-USD)..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-sm">
-                <div id="suggestions" class="absolute top-full left-0 w-full bg-[#0a0a0a] border border-white/10 rounded-2xl mt-2 overflow-hidden hidden z-50"></div>
+                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" placeholder="Search Asset (AAPL, BTC-USD)..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-sm transition-all">
+                <div id="suggestions" class="absolute top-full left-0 w-full bg-[#0a0a0a] border border-white/10 rounded-2xl mt-2 overflow-hidden hidden z-50 shadow-2xl"></div>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-8 glass rounded-[3rem] p-10">
+            <div class="lg:col-span-8 glass-card rounded-[3rem] p-10">
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] tracking-widest uppercase mb-2">---</p>
@@ -38,17 +54,19 @@
             </div>
 
             <div class="lg:col-span-4 flex flex-col gap-6">
-                <div class="glass rounded-[2rem] p-8 border-l-4 border-blue-500">
+                <div class="glass-card rounded-[2.5rem] p-8 border-l-4 border-blue-500">
                     <p class="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">12M AI Target</p>
                     <h3 id="targetDisplay" class="text-4xl font-black">$0.00</h3>
                 </div>
-                <div class="glass rounded-[2rem] p-8">
+
+                <div class="glass-card rounded-[2rem] p-8">
                     <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-3 flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> AI Oracle
                     </p>
-                    <p id="aiTipDisplay" class="text-sm font-medium leading-relaxed italic text-gray-300">Analysis pending...</p>
+                    <p id="aiTipDisplay" class="text-sm font-medium leading-relaxed italic text-gray-300">Syncing with markets...</p>
                 </div>
-                <div class="glass rounded-[2rem] p-8">
+
+                <div class="glass-card rounded-[2rem] p-8">
                     <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Market News</p>
                     <div id="newsArea" class="space-y-4"></div>
                 </div>
@@ -59,6 +77,7 @@
     <script>
         let ticker = "AAPL";
         let searchTimeout;
+
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
             if (q.length < 2) { box.classList.add('hidden'); return; }
@@ -72,7 +91,9 @@
                 }
             }, 300);
         }
+
         function selectTicker(s) { document.getElementById('tickerInput').value = s; document.getElementById('suggestions').classList.add('hidden'); ticker = s; refreshData(); }
+
         async function refreshData() {
             try {
                 const res = await fetch(`/api/stream/${ticker}`);
@@ -85,7 +106,7 @@
                 const change = parseFloat(data.change);
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').className = `text-2xl font-bold ${change >= 0 ? 'neon-green' : 'neon-red'}`;
-                document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block text-[11px] font-semibold hover:text-emerald-400 transition truncate underline decoration-white/10">${n.title}</a>`).join('');
+                document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block text-[11px] font-semibold hover:text-emerald-400 transition truncate underline decoration-white/10 italic">${n.title}</a>`).join('');
                 document.getElementById('chartArea').innerHTML = data.chart;
                 const scripts = document.getElementById('chartArea').getElementsByTagName('script');
                 for (let n = 0; n < scripts.length; n++) { eval(scripts[n].innerHTML); }

@@ -11,22 +11,22 @@ import requests
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-def get_ai_prediction(ticker, current_price):
+def get_pro_analysis(ticker, current_price):
+    """Calculates professional 12M targets based on annual trends."""
     try:
         stock = yf.Ticker(ticker)
         hist = stock.history(period="1y")
-        if hist.empty: return {"target": "N/A", "insight": "Analyzing historical data..."}
+        if hist.empty: return {"target": "N/A", "insight": "Awaiting more data..."}
         
         start_price = float(hist['Close'].iloc[0])
         annual_return = (current_price - start_price) / start_price
         projected = current_price * (1 + annual_return)
         
-        return {
-            "target": f"${projected:,.2f}",
-            "insight": f"Based on a {annual_return*100:+.1f}% annual trend, AI projects a 12M target of ${projected:,.2f}."
-        }
+        # Professional phrasing for the AI Oracle
+        insight = f"Based on a {annual_return*100:+.1f}% yearly trajectory, our model projects a 12-month baseline of ${projected:,.2f}."
+        return {"target": f"${projected:,.2f}", "insight": insight}
     except:
-        return {"target": "TBD", "insight": "Gathering market intelligence..."}
+        return {"target": "TBD", "insight": "Syncing with market protocols..."}
 
 @app.get("/")
 async def home(request: Request):
@@ -34,6 +34,7 @@ async def home(request: Request):
 
 @app.get("/api/search/{query}")
 async def search(query: str):
+    """Fetches real-time ticker suggestions."""
     try:
         url = f"https://query1.finance.yahoo.com/v1/finance/search?q={query}"
         res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -58,7 +59,7 @@ async def stream_data(ticker: str):
         change_pct = ((current_price - prev_close) / prev_close) * 100
         theme_color = '#00ffbb' if change_pct >= 0 else '#ff3366'
         
-        # FIXED: Robust News Logic
+        # News Engine
         news = []
         try:
             raw_news = stock.news
@@ -66,14 +67,12 @@ async def stream_data(ticker: str):
                 for n in raw_news[:3]:
                     t, l = n.get('title'), n.get('link')
                     if t and l: news.append({"title": t, "link": l})
-            if not news:
-                news = [{"title": "No recent headlines found for this asset.", "link": "#"}]
-        except:
-            news = [{"title": "News feed temporarily unavailable.", "link": "#"}]
+            if not news: news = [{"title": "No recent headlines found.", "link": "#"}]
+        except: news = [{"title": "News temporarily offline.", "link": "#"}]
             
-        prediction = get_ai_prediction(ticker, current_price)
+        analysis = get_pro_analysis(ticker, current_price)
         
-        # Build Chart
+        # Chart Logic
         fig = go.Figure()
         fig.add_shape(type="line", x0=df.index[0], x1=df.index[-1], y0=prev_close, y1=prev_close, 
                       line=dict(color="rgba(255,255,255,0.1)", width=1, dash="dot"))
@@ -86,9 +85,8 @@ async def stream_data(ticker: str):
         
         return {
             "symbol": ticker.upper(), "price": f"{current_price:,.2f}", "change": f"{change_pct:+.2f}%",
-            "target": prediction['target'], "ai_tip": prediction['insight'], "news": news,
+            "target": analysis['target'], "ai_tip": analysis['insight'], "news": news,
             "chart": pio.to_html(fig, full_html=False, config={'displayModeBar': False}),
-            "vol": round(np.std(np.diff(np.log(df['Close'].values.flatten() + 1e-9))) * 1000, 1),
-            "hype": round(min(10, (df['Volume'].iloc[-1] / df['Volume'].mean() * 5)), 1)
+            "hype": round(min(10, (df['Volume'].iloc[-1] / df['Volume'].mean() * 5)), 1) if not df['Volume'].empty else 1.0
         }
     except Exception as e: return JSONResponse({"error": str(e)}, status_code=500)
