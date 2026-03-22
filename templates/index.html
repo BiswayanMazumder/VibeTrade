@@ -1,118 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vantedgee | AI Pro Terminal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vantedge | AI Market Intelligence</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 100vh; overflow-x: hidden; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #050505; 
+            color: white; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+        }
+
+        /* Header Isolation Fix for Search Dropdown */
+        header { isolation: isolate; position: relative; z-index: 1000 !important; }
+
         .glass-card { 
-            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d;
+            background: rgba(255, 255, 255, 0.02); 
+            backdrop-filter: blur(30px); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d;
+            position: relative;
+            z-index: 1;
         }
+
         .glass-card:hover { 
-            transform: translateY(-10px) scale(1.01); border-color: rgba(16, 185, 129, 0.3);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.1);
+            transform: translateY(-8px) scale(1.01); 
+            border-color: rgba(16, 185, 129, 0.3); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         }
-        .neon-green { text-shadow: 0 0 15px rgba(0, 255, 187, 0.5); color: #00ffbb; }
-        .neon-red { text-shadow: 0 0 15px rgba(255, 51, 102, 0.5); color: #ff3366; }
+
+        .active-btn { 
+            color: #60a5fa !important; 
+            border-bottom: 2px solid #60a5fa; 
+        }
+
+        .time-btn { transition: color 0.2s; }
+
+        /* Fixed Positioning for Search to avoid Clipping */
+        #suggestions { 
+            position: fixed;
+            background: #0f0f0f; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 1rem;
+            display: none;
+            z-index: 100000 !important;
+            box-shadow: 0 30px 60px rgba(0,0,0,1);
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        #suggestions div {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #suggestions div:hover { background: rgba(255,255,255,0.05); }
     </style>
 </head>
 <body class="p-6 md:p-12">
     <div class="max-w-7xl mx-auto">
+        
         <header class="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
-            <h1 class="text-2xl font-black italic tracking-tighter uppercase">VANT<span class="text-emerald-400">EDGEE.</span></h1>
-            <div class="relative w-full md:w-96">
-                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" placeholder="Search (AAPL, BTC-USD)..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-sm">
-                <div id="suggestions" class="absolute top-full left-0 w-full bg-[#0a0a0a] border border-white/10 rounded-2xl mt-2 overflow-hidden hidden z-50 shadow-2xl"></div>
+            <h1 class="text-2xl font-black italic uppercase tracking-tighter">VANT<span class="text-emerald-400">EDGE.</span></h1>
+            
+            <div class="relative w-full md:w-96" id="searchWrapper">
+                <input id="tickerInput" 
+                       autocomplete="off" 
+                       oninput="handleSearch(this.value)" 
+                       placeholder="Search Asset (TCS.NS, TSLA)..." 
+                       class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-xs transition-all placeholder:text-gray-600">
+                
+                <div id="suggestions"></div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-8 glass-card rounded-[3rem] p-10">
-                <div class="flex justify-between items-start mb-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-0">
+            
+            <div class="lg:col-span-8 glass-card rounded-[2.5rem] p-10">
+                <div class="flex justify-between items-start mb-6">
                     <div>
-                        <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] tracking-widest uppercase italic">---</p>
-                        <div class="flex items-center gap-6">
-                            <h2 id="priceDisplay" class="text-6xl font-extrabold tracking-tighter">$0.00</h2>
-                            <span id="changeDisplay" class="text-xl font-bold">+0.00%</span>
+                        <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] tracking-widest uppercase mb-1">---</p>
+                        <div class="flex items-center gap-4">
+                            <h2 id="priceDisplay" class="text-6xl font-extrabold tracking-tighter">0.00</h2>
+                            <span id="changeDisplay" class="text-xl font-bold">0.00%</span>
                         </div>
                     </div>
+                    <!-- <button class="bg-blue-100 text-blue-900 px-6 py-2 rounded-full text-xs font-bold hover:bg-blue-200 transition">
+                        + Follow
+                    </button> -->
                 </div>
-                <div id="chartArea"></div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-8 border-t border-white/5">
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Open</p> <p id="f_open" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mkt Cap</p> <p id="f_mkt" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">52w High</p> <p id="f_h52" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">P/E Ratio</p> <p id="f_pe" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">High</p> <p id="f_h" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Low</p> <p id="f_l" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">52w Low</p> <p id="f_l52" class="text-sm font-bold text-white">---</p> </div>
-                    <div class="space-y-1"> <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dividend</p> <p id="f_div" class="text-sm font-bold text-white">---</p> </div>
+
+                <div class="flex gap-6 mb-8 border-b border-white/5 pb-2 text-[11px] font-bold text-gray-500">
+                    <button onclick="updatePeriod('1d', this)" class="time-btn active-btn">1D</button>
+                    <button onclick="updatePeriod('5d', this)" class="time-btn">5D</button>
+                    <button onclick="updatePeriod('1mo', this)" class="time-btn">1M</button>
+                    <button onclick="updatePeriod('6mo', this)" class="time-btn">6M</button>
+                    <button onclick="updatePeriod('1y', this)" class="time-btn">1Y</button>
+                    <button onclick="updatePeriod('max', this)" class="time-btn">MAX</button>
+                </div>
+
+                <div id="chartArea" class="min-h-[350px]"></div>
+
+                <div class="grid grid-cols-3 gap-x-12 gap-y-6 mt-10 pt-10 border-t border-white/5">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">Open</p><p id="f_open" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">High</p><p id="f_high" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">Low</p><p id="f_low" class="text-xs font-semibold">---</p></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">Mkt cap</p><p id="f_mkt" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">P/E ratio</p><p id="f_pe" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">52-wk high</p><p id="f_h52" class="text-xs font-semibold">---</p></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">Dividend</p><p id="f_div" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">Qtrly div amt</p><p id="f_qdiv" class="text-xs font-semibold">---</p></div>
+                        <div class="flex justify-between items-center"><p class="text-[11px] text-gray-500">52-wk low</p><p id="f_l52" class="text-xs font-semibold">---</p></div>
+                    </div>
                 </div>
             </div>
 
             <div class="lg:col-span-4 flex flex-col gap-6">
                 <div class="glass-card rounded-[2.5rem] p-8 border-l-4 border-blue-500">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">12M AI Target</p>
-                    <h3 id="targetDisplay" class="text-4xl font-black">$0.00</h3>
+                    <p class="text-[10px] font-bold uppercase text-blue-400 mb-1">12M AI Target</p>
+                    <h3 id="targetDisplay" class="text-4xl font-black tracking-tighter">---</h3>
                 </div>
-                <div class="glass-card rounded-[2rem] p-8">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> AI Oracle
-                    </p>
-                    <p id="aiTipDisplay" class="text-xs font-medium leading-relaxed italic text-gray-300">Syncing...</p>
+
+                <div class="glass-card rounded-[2.5rem] p-8">
+                    <p class="text-[10px] font-bold uppercase text-emerald-400 mb-4 flex items-center gap-2">Sentiment Pulse</p>
+                    <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-3">
+                        <div id="sentimentBar" class="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 transition-all duration-1000" style="width: 50%"></div>
+                    </div>
+                    <p id="aiTipDisplay" class="text-[11px] italic text-gray-400 leading-relaxed">Evaluating market vibes...</p>
                 </div>
-                <div class="glass-card rounded-[2rem] p-8 overflow-hidden">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Market News</p>
-                    <div id="newsArea" class="space-y-4"></div>
+
+                <div class="glass-card rounded-[2.5rem] p-8 overflow-hidden">
+                    <p class="text-[10px] font-bold uppercase text-gray-500 mb-6 tracking-widest">Headline Stream</p>
+                    <div id="newsArea" class="space-y-5"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let ticker = "AAPL";
-        let searchTimeout;
+        let ticker = "AAPL", period = "1d";
+
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
-            if (q.length < 2) { box.classList.add('hidden'); return; }
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
+            const input = document.getElementById('tickerInput');
+            if (q.length < 2) { box.style.display = 'none'; return; }
+
+            const rect = input.getBoundingClientRect();
+            box.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            box.style.left = `${rect.left}px`;
+            box.style.width = `${rect.width}px`;
+
+            try {
                 const res = await fetch(`/api/search/${q}`);
                 const data = await res.json();
                 if (data.length > 0) {
-                    box.innerHTML = data.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 flex justify-between"><span class="font-bold text-emerald-400">${i.symbol}</span><span class="text-[10px] text-gray-500">${i.name}</span></div>`).join('');
-                    box.classList.remove('hidden');
-                }
-            }, 300);
+                    box.innerHTML = data.map(i => `
+                        <div onclick="selectTicker('${i.symbol}')">
+                            <span class="font-bold text-emerald-400 text-sm">${i.symbol}</span>
+                            <span class="text-gray-500 text-[10px] ml-2 uppercase truncate">${i.name}</span>
+                        </div>
+                    `).join('');
+                    box.style.display = 'block';
+                } else { box.style.display = 'none'; }
+            } catch (e) { console.error(e); }
         }
-        function selectTicker(s) { document.getElementById('tickerInput').value = s; document.getElementById('suggestions').classList.add('hidden'); ticker = s; refreshData(); }
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('searchWrapper').contains(e.target)) {
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        });
+
+        function selectTicker(s) { 
+            ticker = s; 
+            document.getElementById('tickerInput').value = s;
+            document.getElementById('suggestions').style.display = 'none';
+            refreshData(); 
+        }
+
+        function updatePeriod(p, btn) {
+            period = p; 
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn'));
+            btn.classList.add('active-btn'); 
+            refreshData();
+        }
+
         async function refreshData() {
             try {
-                const res = await fetch(`/api/stream/${ticker}`);
+                const res = await fetch(`/api/stream/${ticker}?period=${period}`);
                 const data = await res.json();
+                
                 document.getElementById('symbolDisplay').innerText = data.symbol;
-                document.getElementById('priceDisplay').innerText = `$${data.price}`;
-                const change = parseFloat(data.change);
+                document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 font-normal ml-2">${data.currency_text}</span>`;
                 document.getElementById('changeDisplay').innerText = data.change;
-                document.getElementById('changeDisplay').className = `text-xl font-bold ${change >= 0 ? 'neon-green' : 'neon-red'}`;
+                document.getElementById('changeDisplay').style.color = parseFloat(data.change) >= 0 ? '#00ffbb' : '#ff3366';
+                
                 const f = data.fundamentals;
-                document.getElementById('f_open').innerText = f.open; document.getElementById('f_mkt').innerText = f.mkt_cap;
-                document.getElementById('f_h52').innerText = f.h52; document.getElementById('f_pe').innerText = f.pe;
-                document.getElementById('f_h').innerText = f.high; document.getElementById('f_l').innerText = f.low;
-                document.getElementById('f_l52').innerText = f.l52; document.getElementById('f_div').innerText = f.div;
+                document.getElementById('f_open').innerText = f.open;
+                document.getElementById('f_high').innerText = f.high;
+                document.getElementById('f_low').innerText = f.low;
+                document.getElementById('f_mkt').innerText = f.mkt_cap;
+                document.getElementById('f_pe').innerText = f.pe;
+                document.getElementById('f_h52').innerText = f.h52;
+                document.getElementById('f_div').innerText = f.div;
+                document.getElementById('f_qdiv').innerText = f.q_div;
+                document.getElementById('f_l52').innerText = f.l52;
+
                 document.getElementById('targetDisplay').innerText = data.target;
                 document.getElementById('aiTipDisplay').innerText = data.ai_tip;
-                document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block text-[11px] font-semibold hover:text-emerald-400 transition truncate underline decoration-white/10 italic">${n.title}</a>`).join('');
+                document.getElementById('sentimentBar').style.width = `${data.sentiment}%`;
+                
+                document.getElementById('newsArea').innerHTML = data.news.map(n => `
+                    <a href="${n.link}" target="_blank" class="block text-[11px] hover:text-emerald-400 transition underline decoration-white/5 leading-relaxed">
+                        ${n.title}
+                    </a>
+                `).join('');
+
                 document.getElementById('chartArea').innerHTML = data.chart;
                 const scripts = document.getElementById('chartArea').getElementsByTagName('script');
                 for (let n = 0; n < scripts.length; n++) { eval(scripts[n].innerHTML); }
             } catch (e) { console.error(e); }
         }
-        setInterval(refreshData, 30000); window.onload = refreshData;
+        window.onload = refreshData;
     </script>
 </body>
 </html>
