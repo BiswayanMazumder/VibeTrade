@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VibeTrade Pro | AI Fintech</title>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeTrade Pro | Live AI</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 100vh; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); }
         .neon-green { text-shadow: 0 0 15px rgba(0, 255, 187, 0.5); color: #00ffbb; }
         .neon-red { text-shadow: 0 0 15px rgba(255, 51, 102, 0.5); color: #ff3366; }
     </style>
@@ -17,18 +16,16 @@
 <body class="p-6 md:p-12">
     <div class="max-w-7xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
-            <h1 class="text-3xl font-black italic tracking-tighter">VIBE<span class="text-emerald-400">TRADE.</span></h1>
+            <h1 class="text-2xl font-black italic tracking-tighter uppercase">Vibe<span class="text-emerald-400">Trade</span></h1>
             <div class="relative w-full md:w-96">
-                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" placeholder="Search (AAPL, TCS.NS)..." 
-                       class="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 outline-none focus:border-emerald-500 transition-all font-bold uppercase text-sm">
+                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" placeholder="Search (AAPL, BTC-USD)..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-sm">
                 <div id="suggestions" class="absolute top-full left-0 w-full bg-[#0a0a0a] border border-white/10 rounded-2xl mt-2 overflow-hidden hidden z-50"></div>
-                <button onclick="changeTicker()" class="absolute right-3 top-2.5 bg-emerald-500 text-black px-5 py-1.5 rounded-xl font-bold">GO</button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 glass rounded-[3rem] p-10">
-                <div class="flex justify-between items-start mb-10">
+                <div class="flex justify-between items-start mb-6">
                     <div>
                         <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] tracking-widest uppercase mb-2">---</p>
                         <div class="flex items-center gap-6">
@@ -37,31 +34,23 @@
                         </div>
                     </div>
                 </div>
-                <div id="chartArea" class="w-full min-h-[400px]"></div>
+                <div id="chartArea"></div>
             </div>
 
-            <div class="lg:col-span-4 flex flex-col gap-8">
-                <div class="glass rounded-[2.5rem] p-8 border-l-4 border-blue-500">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">12M Price Target</p>
-                    <h3 id="targetDisplay" class="text-4xl font-black text-white">$0.00</h3>
-                    <p class="text-[9px] text-gray-500 mt-2 italic">*Algorithmic Consensus</p>
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="glass rounded-[2rem] p-8 border-l-4 border-blue-500">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">12M AI Target</p>
+                    <h3 id="targetDisplay" class="text-4xl font-black">$0.00</h3>
                 </div>
-
-                <div class="glass rounded-[2.5rem] p-8 border border-white/5">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Analyst Insight
+                <div class="glass rounded-[2rem] p-8">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> AI Oracle
                     </p>
-                    <p id="aiTipDisplay" class="text-sm font-medium leading-relaxed italic text-gray-300">Calculating entry points...</p>
+                    <p id="aiTipDisplay" class="text-sm font-medium leading-relaxed italic text-gray-300">Analysis pending...</p>
                 </div>
-
-                <div class="glass rounded-[2.5rem] p-8">
-                    <div class="flex justify-between mb-4">
-                        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Hype Velocity</p>
-                        <span id="hypeDisplay" class="text-emerald-400 font-black">0.0</span>
-                    </div>
-                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                        <div id="hypeBar" class="bg-emerald-500 h-full transition-all duration-1000" style="width: 0%"></div>
-                    </div>
+                <div class="glass rounded-[2rem] p-8">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Market News</p>
+                    <div id="newsArea" class="space-y-4"></div>
                 </div>
             </div>
         </div>
@@ -70,7 +59,6 @@
     <script>
         let ticker = "AAPL";
         let searchTimeout;
-
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
             if (q.length < 2) { box.classList.add('hidden'); return; }
@@ -79,15 +67,12 @@
                 const res = await fetch(`/api/search/${q}`);
                 const data = await res.json();
                 if (data.length > 0) {
-                    box.innerHTML = data.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 flex justify-between">
-                        <span class="font-bold text-emerald-400">${i.symbol}</span><span class="text-[10px] text-gray-500">${i.name}</span></div>`).join('');
+                    box.innerHTML = data.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 flex justify-between"><span class="font-bold text-emerald-400">${i.symbol}</span><span class="text-[10px] text-gray-500">${i.name}</span></div>`).join('');
                     box.classList.remove('hidden');
                 }
             }, 300);
         }
-
         function selectTicker(s) { document.getElementById('tickerInput').value = s; document.getElementById('suggestions').classList.add('hidden'); ticker = s; refreshData(); }
-
         async function refreshData() {
             try {
                 const res = await fetch(`/api/stream/${ticker}`);
@@ -100,14 +85,12 @@
                 const change = parseFloat(data.change);
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').className = `text-2xl font-bold ${change >= 0 ? 'neon-green' : 'neon-red'}`;
-                document.getElementById('hypeDisplay').innerText = data.hype;
-                document.getElementById('hypeBar').style.width = `${(data.hype / 10) * 100}%`;
+                document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block text-[11px] font-semibold hover:text-emerald-400 transition truncate underline decoration-white/10">${n.title}</a>`).join('');
                 document.getElementById('chartArea').innerHTML = data.chart;
                 const scripts = document.getElementById('chartArea').getElementsByTagName('script');
                 for (let n = 0; n < scripts.length; n++) { eval(scripts[n].innerHTML); }
             } catch (e) { console.error(e); }
         }
-        function changeTicker() { ticker = document.getElementById('tickerInput').value.toUpperCase(); refreshData(); }
         setInterval(refreshData, 30000);
         window.onload = refreshData;
     </script>
