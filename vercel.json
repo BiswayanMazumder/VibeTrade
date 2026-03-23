@@ -7,6 +7,10 @@
   ],
   "routes": [
     {
+      "source": "/_vercel/speed-insights/(.*)",
+      "destination": "/_vercel/speed-insights/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "api/index.py"
     }
