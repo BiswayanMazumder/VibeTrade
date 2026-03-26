@@ -55,7 +55,7 @@ def fetch_robust_news(ticker):
 
 @app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request,name="index.html")
 
 @app.get("/api/context")
 async def context_api():
