@@ -1,14 +1,7 @@
 fastapi
-uvicorn
 yfinance>=0.2.54
 pandas
 numpy
 plotly
 jinja2
 requests
-# --- Added for SQL & Auth ---
-sqlmodel
-psycopg2-binary
-passlib[bcrypt]
-python-jose[cryptography]
-python-multipart
