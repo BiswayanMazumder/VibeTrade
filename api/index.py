@@ -1,39 +1,60 @@
+import os
 import yfinance as yf
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.io as pio
 import requests
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Request, Query, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
+from sqlmodel import SQLModel, Field, create_engine, Session, select
+from typing import Optional, List
 
+# --- DATABASE CONFIGURATION ---
+# Using the Pooled URL for better performance on Vercel
+DATABASE_URL = ""
+
+engine = create_engine(DATABASE_URL, echo=False)
+
+# Define your User table for Login/Auth
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    email: str = Field(unique=True)
+    hashed_password: str # Always hash passwords in a real app!
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+# --- APP INITIALIZATION ---
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
 CURRENCY_SYMBOLS = {'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥'}
 
+# --- CORE FUNCTIONS ---
+
 def get_realtime_trending():
-    """Fetches real-time trending tickers using yf.Search for 2026 stability."""
     try:
-        # Search for 'Most Active' - this hits Yahoo's JSON search endpoint
         s = yf.Search("Most Active", max_results=12)
-        
         trending = []
         for quote in s.quotes:
             symbol = quote.get('symbol')
-            # Filter for common stocks/indices to keep the list clean
             if symbol and ('.' not in symbol or symbol.endswith(".NS") or symbol.endswith(".BO")):
                 trending.append({
                     "s": symbol,
                     "n": quote.get('shortname') or quote.get('longname') or symbol
                 })
-        
-        # High-reliability Fallback (Market Giants) if search is empty
         if not trending:
             fallback = ["RELIANCE.NS", "NVDA", "TCS.NS", "AAPL", "TSLA", "ZOMATO.NS", "HDFCBANK.NS"]
             for sym in fallback:
                 trending.append({"s": sym, "n": sym.replace(".NS", "")})
-                
         return trending[:8]
     except Exception as e:
         print(f"Trending Error: {e}")
@@ -53,9 +74,19 @@ def fetch_robust_news(ticker):
     except: pass
     return news if news else [{"title": f"No specific headlines for {ticker.upper()}.", "link": "#"}]
 
+# --- ROUTES ---
+
 @app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse(request=request,name="index.html")
+    return templates.TemplateResponse(request=request, name="index.html")
+
+# Example User Registration Route
+@app.post("/api/register")
+async def register_user(user: User, session: Session = Depends(get_session)):
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"status": "User created", "username": user.username}
 
 @app.get("/api/context")
 async def context_api():
@@ -87,12 +118,10 @@ async def stream_data(ticker: str, period: str = Query("1d")):
         change = ((current_p - open_p) / open_p) * 100
         color = '#00ffbb' if change >= 0 else '#ff3366'
         
-        # Stats
         roe = info.get('returnOnEquity', 0)
         health = min(95, max(15, int(roe * 400))) if roe else 55
         hype = min(95, max(20, int(abs(change) * 18)))
 
-        # Fundamentals
         def f_val(v): return f"{v:,.2f}" if v else "---"
         m_cap = f"{info.get('marketCap',0)/1e7:,.1f}LCr" if curr == 'INR' else f"{info.get('marketCap',0)/1e9:,.1f}B"
 
@@ -102,7 +131,6 @@ async def stream_data(ticker: str, period: str = Query("1d")):
             "div": f"{info.get('dividendYield',0)*100:.2f}%", "q_div": f_val(info.get('lastDividendValue')), "l52": f_val(info.get('fiftyTwoWeekLow'))
         }
 
-        # Chart Configuration (Interactive Tooltip)
         chart_data = {
             "x": hist.index.strftime('%Y-%m-%d %H:%M:%S').tolist(),
             "y": hist['Close'].tolist(),
