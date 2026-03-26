@@ -190,18 +190,20 @@ async def stream_data(ticker: str, period: str = Query("1d")):
         curr = info.get('currency', 'USD')
         sym = CURRENCY_SYMBOLS.get(curr, curr + " ")
 
+        # --- DATA EXTRACTION ---
         current_p = hist['Close'].iloc[-1]
-        open_p = hist['Close'].iloc[0]
+        open_p = info.get('regularMarketOpen') or hist['Open'].iloc[0]
         change = ((current_p - open_p) / open_p) * 100
         color = '#00ffbb' if change >= 0 else '#ff3366'
 
-        chart_data = {
-            "x": hist.index.strftime('%Y-%m-%d %H:%M:%S').tolist(),
-            "y": hist['Close'].tolist(),
-            "color": color,
-            "curr": curr,
-            "status": "LIVE"
-        }
+        # Helper to format numbers nicely (e.g., 1.2B instead of 1200000000)
+        def format_big_num(num):
+            if not num or num == "N/A": return "N/A"
+            for unit in ['', 'K', 'M', 'B', 'T']:
+                if abs(num) < 1000.0:
+                    return f"{num:3.1f}{unit}"
+                num /= 1000.0
+            return f"{num:.1f}T"
 
         return {
             "symbol": ticker.upper(),
@@ -209,12 +211,25 @@ async def stream_data(ticker: str, period: str = Query("1d")):
             "currency_text": curr,
             "change": f"{change:+.2f}%",
             "news": fetch_robust_news(ticker),
-            "target": f"{sym}{current_p*1.15:,.2f}",
-            "health": 70,
+            "target": f"{sym}{info.get('targetMeanPrice', current_p*1.15):,.2f}",
+            "health": 70, 
             "hype": 60,
-            "fundamentals": {},
-            "chart_json": chart_data
+            # ✅ FILL THE FUNDAMENTALS HERE
+            "fundamentals": {
+                "open": f"{sym}{open_p:,.2f}",
+                "mkt_cap": format_big_num(info.get('marketCap')),
+                "pe_ratio": f"{info.get('trailingPE', 'N/A'):.2f}" if isinstance(info.get('trailingPE'), (int, float)) else "N/A",
+                "dividend": f"{info.get('dividendYield', 0)*100:.2f}%" if info.get('dividendYield') else "0.00%",
+                "high_52w": f"{sym}{info.get('fiftyTwoWeekHigh', 0):,.2f}",
+                "low_52w": f"{sym}{info.get('fiftyTwoWeekLow', 0):,.2f}"
+            },
+            "chart_json": {
+                "x": hist.index.strftime('%Y-%m-%d %H:%M:%S').tolist(),
+                "y": hist['Close'].tolist(),
+                "color": color,
+                "curr": curr,
+                "status": "LIVE"
+            }
         }
-
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -331,9 +331,14 @@ async function submitAuth() {
                 document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block text-[11px] hover:text-emerald-400 underline decoration-white/5 italic">${n.title}</a>`).join('');
 
                 const f = data.fundamentals;
-                document.getElementById('f_open').innerText = f.open; document.getElementById('f_mkt').innerText = f.mkt_cap;
-                document.getElementById('f_pe').innerText = f.pe; document.getElementById('f_h52').innerText = f.h52;
-                document.getElementById('f_div').innerText = f.div; document.getElementById('f_l52').innerText = f.l52;
+
+// ✅ Make sure these match the keys in your Python dictionary exactly
+document.getElementById('f_open').innerText = f.open; 
+document.getElementById('f_mkt').innerText = f.mkt_cap;
+document.getElementById('f_pe').innerText = f.pe_ratio; // Changed from f.pe
+document.getElementById('f_h52').innerText = f.high_52w; // Changed from f.h52
+document.getElementById('f_div').innerText = f.dividend; // Changed from f.div
+document.getElementById('f_l52').innerText = f.low_52w;  // Changed from f.l52
             } catch (e) { console.error(e); } finally { setTimeout(() => document.getElementById('loader').classList.add('hidden'), 800); }
         }
 
