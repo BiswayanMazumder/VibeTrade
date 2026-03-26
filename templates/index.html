@@ -28,6 +28,35 @@
         #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
         #loader.hidden { opacity: 0; visibility: hidden; }
         .active-btn { color: #60a5fa !important; border-bottom: 2px solid #60a5fa; }
+        /* GEN-Z ANIMATIONS */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 0px rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 25px rgba(16,185,129,0.9); }
+    100% { box-shadow: 0 0 0px rgba(16,185,129,0.4); }
+}
+
+@keyframes slideFade {
+    0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes gradientFlow {
+    0% { background-position: 0% }
+    100% { background-position: 200% }
+}
+
+.success-text {
+    background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb);
+    background-size: 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 2s linear infinite;
+    font-weight: 800;
+}
+
+.animate-success {
+    animation: slideFade 0.4s ease, glowPulse 1.2s ease;
+}
     </style>
 </head>
 <body>
@@ -39,7 +68,10 @@
             <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
             <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
             <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
-            <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition-colors">Continue</button>
+            <button onclick="submitAuth()" 
+class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition-all duration-300 active:scale-95 hover:scale-[1.02]">
+Continue
+</button>
             <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase tracking-widest hover:text-white">Switch Mode</p>
         </div>
     </div>
@@ -137,41 +169,64 @@
             document.getElementById("authError").classList.add("hidden");
         }
 
-        async function submitAuth() {
-            const email = document.getElementById("authEmail").value;
-            const password = document.getElementById("authPassword").value;
-            const username = document.getElementById("authUsername").value;
-            const error = document.getElementById("authError");
+async function submitAuth() {
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const username = document.getElementById("authUsername").value;
+    const error = document.getElementById("authError");
 
-            error.classList.add("hidden");
+    error.classList.add("hidden");
+    error.classList.remove("animate-success", "success-text");
 
-            let url = isLogin
-                ? `/auth/login?email=${email}&password=${password}`
-                : `/auth/register?username=${username}&email=${email}&password=${password}`;
+    let url = isLogin
+        ? `/auth/login?email=${email}&password=${password}`
+        : `/auth/register?username=${username}&email=${email}&password=${password}`;
 
-            try {
-                let res = await fetch(url, { method: "POST" });
-                let data = await res.json();
+    try {
+        let res = await fetch(url, { method: "POST" });
+        let data = await res.json();
 
-                if (!res.ok) {
-                    error.innerText = data.detail || "Authentication failed";
-                    error.classList.remove("hidden");
-                    return;
-                }
-
-                if (isLogin) {
-                    localStorage.setItem("token", data.access_token);
-                    document.getElementById("authModal").classList.add("hidden");
-                    updateAuthUI();
-                } else {
-                    alert("Registered successfully! Please login.");
-                    toggleAuthMode();
-                }
-            } catch (e) {
-                error.innerText = "Connection error";
-                error.classList.remove("hidden");
-            }
+        if (!res.ok) {
+            error.innerText = data.detail || "Authentication failed";
+            error.classList.remove("hidden");
+            error.classList.remove("success-text");
+            error.classList.add("text-red-400", "animate-success");
+            return;
         }
+
+        if (isLogin) {
+            localStorage.setItem("token", data.access_token);
+
+            // 🔥 Smooth close animation
+            const modal = document.getElementById("authModal");
+            modal.style.opacity = "0";
+            setTimeout(() => {
+                modal.classList.add("hidden");
+                modal.style.opacity = "1";
+            }, 250);
+
+            updateAuthUI();
+        } else {
+            // 💥 GEN-Z SUCCESS EFFECT
+            error.innerHTML = "✔ Registration Successful";
+            error.classList.remove("hidden", "text-red-400");
+            error.classList.add("success-text", "animate-success");
+
+            // ✨ Autofill email + smooth switch
+            setTimeout(() => {
+                toggleAuthMode();
+                document.getElementById("authEmail").value = email;
+                error.innerHTML = "Now login →";
+                error.classList.add("success-text");
+            }, 1200);
+        }
+
+    } catch (e) {
+        error.innerText = "Network glitch ⚠️";
+        error.classList.remove("hidden");
+        error.classList.add("text-red-400", "animate-success");
+    }
+}
 
         function logout() {
             localStorage.removeItem("token");
