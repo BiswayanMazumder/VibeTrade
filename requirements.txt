@@ -7,3 +7,7 @@ jinja2
 requests
 webauthn
 psycopg2-binary
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+uvicorn
