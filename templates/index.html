@@ -6,11 +6,11 @@
     <title>Vantedge | AI Pro Terminal</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <favicon href="https://g1uudlawy6t63z36.public.blob.vercel-storage.com/unnamed%20%281%29.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 150vh; overflow-x: hidden; padding-top: 130px; }
         
-        /* MODERN HEADER LOGIC */
         header { 
             position: fixed; top: 0; left: 0; width: 100%; 
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -19,22 +19,12 @@
         }
         .header-hidden { transform: translateY(-100%); }
 
-        /* GLASSMORPHISM & UI COMPONENTS */
         .glass-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; }
         .bar-container { height: 120px; display: flex; align-items: flex-end; gap: 1.5rem; padding: 0 10px; }
         .stat-bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 1.5s ease-out; min-height: 4px; }
         .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
         
-        /* NEXT-GEN AUTH MODAL */
-        #authModal { 
-            display: none; opacity: 0; transition: all 0.4s ease; 
-            z-index: 100001; 
-        }
-        #authModal.active { display: flex; opacity: 1; }
-        .auth-container { transform: scale(0.9); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #authModal.active .auth-container { transform: scale(1); }
-
         #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
         #loader.hidden { opacity: 0; visibility: hidden; }
         .active-btn { color: #60a5fa !important; border-bottom: 2px solid #60a5fa; }
@@ -42,38 +32,37 @@
 </head>
 <body>
 
-    <div id="authModal" class="fixed inset-0 items-center justify-center bg-black/80 backdrop-blur-xl p-6">
-        <div class="auth-container glass-card w-full max-w-md rounded-[3rem] p-10 relative border-emerald-500/20">
-            <div class="text-center">
-                <div class="w-20 h-20 bg-emerald-500/10 rounded-3xl mx-auto mb-6 flex items-center justify-center border border-emerald-500/30">
-                    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                </div>
-                <h2 class="text-2xl font-black italic uppercase tracking-tighter mb-2">Vantedge <span class="text-emerald-400">Vault</span></h2>
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mb-8">Secure Biometric Entry</p>
-                
-                <input id="authUsername" placeholder="Enter Username" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-xs mb-4 text-center">
-                
-                <div class="flex gap-4">
-                    <button onclick="executeAuth('login')" class="flex-1 bg-white text-black font-black text-[10px] uppercase py-4 rounded-2xl hover:bg-emerald-400 transition transform active:scale-95">Log In</button>
-                    <button onclick="executeAuth('register')" class="flex-1 bg-white/5 border border-white/10 font-black text-[10px] uppercase py-4 rounded-2xl hover:border-emerald-500 transition transform active:scale-95">Register</button>
-                </div>
-                
-                <button onclick="toggleAuth(false)" class="mt-8 text-[9px] font-black text-gray-600 uppercase tracking-widest hover:text-white">Exit Terminal</button>
-            </div>
+    <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
+        <div class="glass-card p-8 rounded-2xl w-[350px]">
+            <h2 id="authTitle" class="text-lg font-bold mb-4 text-center">LOGIN</h2>
+            <input id="authEmail" placeholder="Email" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
+            <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
+            <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition-colors">Continue</button>
+            <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase tracking-widest hover:text-white">Switch Mode</p>
         </div>
     </div>
 
     <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl transition-all duration-500 hidden">
         <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
+        <p class="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400">Syncing</p>
     </div>
 
     <header id="mainHeader" class="flex flex-col md:flex-row justify-between items-center gap-8">
         <h1 class="text-2xl font-black italic uppercase tracking-tighter">VANT<span class="text-emerald-400">EDGE.</span></h1>
-        <div class="relative w-full md:w-96" id="searchContainer">
-            <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
-            <div id="suggestions"></div>
+        
+        <div class="flex items-center gap-6 w-full md:w-auto">
+            <div class="relative w-full md:w-96" id="searchContainer">
+                <input id="tickerInput" autocomplete="off" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
+                <div id="suggestions"></div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 px-6 py-3 rounded-xl hover:bg-white/10 transition-all">Login</button>
+                <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold uppercase tracking-widest bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-3 rounded-xl hover:bg-red-500/20 hidden transition-all">Sign Out</button>
+            </div>
         </div>
-        <button onclick="toggleAuth(true)" class="bg-emerald-500/10 border border-emerald-500/20 px-6 py-3 rounded-xl text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:bg-emerald-400 hover:text-black transition">Authenticate</button>
     </header>
 
     <div class="max-w-7xl mx-auto px-6">
@@ -134,104 +123,125 @@
 
     <script>
         let ticker = "AAPL", period = "1d", lastScroll = 0;
+        let isLogin = true;
 
-        // AUTH SYSTEM LOGIC
-        function toggleAuth(show) {
-            const modal = document.getElementById('authModal');
-            show ? modal.classList.add('active') : modal.classList.remove('active');
+        // =========================
+        // 🔐 AUTH SYSTEM LOGIC
+        // =========================
+        function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
+        
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            document.getElementById("authTitle").innerText = isLogin ? "LOGIN" : "REGISTER";
+            document.getElementById("authUsername").classList.toggle("hidden", isLogin);
+            document.getElementById("authError").classList.add("hidden");
         }
 
-        // Utility to convert Base64URL to ArrayBuffer
-        function bufferDecode(value) { return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)); }
-        // Utility to convert ArrayBuffer to Base64URL
-        function bufferEncode(value) { return btoa(String.fromCharCode.apply(null, new Uint8Array(value))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, ""); }
+        async function submitAuth() {
+            const email = document.getElementById("authEmail").value;
+            const password = document.getElementById("authPassword").value;
+            const username = document.getElementById("authUsername").value;
+            const error = document.getElementById("authError");
 
-        async function executeAuth(type) {
-            const username = document.getElementById('authUsername').value;
-            if(!username) return alert("Please enter a username");
+            error.classList.add("hidden");
+
+            let url = isLogin
+                ? `/auth/login?email=${email}&password=${password}`
+                : `/auth/register?username=${username}&email=${email}&password=${password}`;
 
             try {
-                // 1. Get Options from FastAPI
-                const res = await fetch(`/api/auth/${type}/options?username=${username}`, { method: 'POST' });
-                const options = await res.json();
+                let res = await fetch(url, { method: "POST" });
+                let data = await res.json();
 
-                // Decode buffers for the browser API
-                options.challenge = bufferDecode(options.challenge);
-                if (options.user) options.user.id = bufferDecode(options.user.id);
-                if (options.allowCredentials) {
-                    options.allowCredentials.forEach(c => c.id = bufferDecode(c.id));
+                if (!res.ok) {
+                    error.innerText = data.detail || "Authentication failed";
+                    error.classList.remove("hidden");
+                    return;
                 }
 
-                // 2. Trigger Biometrics (FaceID/TouchID/Fingerprint)
-                let credential;
-                if (type === 'register') {
-                    credential = await navigator.credentials.create({ publicKey: options });
+                if (isLogin) {
+                    localStorage.setItem("token", data.access_token);
+                    document.getElementById("authModal").classList.add("hidden");
+                    updateAuthUI();
                 } else {
-                    credential = await navigator.credentials.get({ publicKey: options });
+                    alert("Registered successfully! Please login.");
+                    toggleAuthMode();
                 }
-
-                // 3. Format result for backend
-                const credentialJSON = {
-                    id: credential.id,
-                    rawId: bufferEncode(credential.rawId),
-                    type: credential.type,
-                    response: {
-                        clientDataJSON: bufferEncode(credential.response.clientDataJSON),
-                        attestationObject: type === 'register' ? bufferEncode(credential.response.attestationObject) : undefined,
-                        authenticatorData: type === 'login' ? bufferEncode(credential.response.authenticatorData) : undefined,
-                        signature: type === 'login' ? bufferEncode(credential.response.signature) : undefined,
-                        userHandle: (type === 'login' && credential.response.userHandle) ? bufferEncode(credential.response.userHandle) : undefined,
-                    }
-                };
-
-                // 4. Final Verification
-                const verifyRes = await fetch(`/api/auth/${type}/verify?username=${username}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(credentialJSON)
-                });
-
-                const result = await verifyRes.json();
-                if (result.status === "success") {
-                    alert(result.message);
-                    toggleAuth(false);
-                } else {
-                    alert("Auth failed: " + result.error);
-                }
-
-            } catch (err) {
-                console.error(err);
-                alert("Identity verification interrupted.");
+            } catch (e) {
+                error.innerText = "Connection error";
+                error.classList.remove("hidden");
             }
         }
 
+        function logout() {
+            localStorage.removeItem("token");
+            updateAuthUI();
+        }
+
+        function updateAuthUI() {
+            const token = localStorage.getItem("token");
+            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
+            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
+        }
+
+        // =========================
         // CORE UI LOGIC
+        // =========================
         window.addEventListener("scroll", () => {
             const currentScroll = window.pageYOffset;
             const header = document.getElementById("mainHeader");
-            if (currentScroll > lastScroll && currentScroll > 60) header.classList.add("header-hidden");
-            else header.classList.remove("header-hidden");
+            const suggestions = document.getElementById("suggestions");
+
+            if (currentScroll > lastScroll && currentScroll > 60) {
+                header.classList.add("header-hidden");
+                suggestions.style.display = "none";
+            } else {
+                header.classList.remove("header-hidden");
+            }
             lastScroll = currentScroll;
         });
 
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
             const rect = document.getElementById('tickerInput').getBoundingClientRect();
-            box.style.top = `${rect.bottom + window.scrollY + 10}px`; box.style.left = `${rect.left}px`; box.style.width = `${rect.width}px`;
+            box.style.top = `${rect.bottom + window.scrollY + 10}px`; 
+            box.style.left = `${rect.left}px`; 
+            box.style.width = `${rect.width}px`;
 
             if (q === '') {
-                const res = await fetch('/api/context'); const data = await res.json();
-                box.innerHTML = `<p class="p-4 text-[9px] font-black uppercase text-gray-600">Trending Now</p>` + data.trending.map(i => `<div onclick="selectTicker('${i.s}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs flex justify-between"><span><b class="text-emerald-400">${i.s}</b> - ${i.n}</span></div>`).join('');
-                box.style.display = 'block'; return;
+                try {
+                    const res = await fetch('/api/context'); 
+                    const data = await res.json();
+                    box.innerHTML = `<p class="p-4 text-[9px] font-black uppercase text-gray-600">Trending Now</p>` + 
+                        data.trending.map(i => `<div onclick="selectTicker('${i.s}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs flex justify-between"><span><b class="text-emerald-400">${i.s}</b> - ${i.n}</span></div>`).join('');
+                    box.style.display = 'block'; 
+                } catch(e) {}
+                return;
             }
-            const res = await fetch(`/api/search/${q}`); const data = await res.json();
+            const res = await fetch(`/api/search/${q}`); 
+            const data = await res.json();
             box.innerHTML = data.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs"><b class="text-emerald-400">${i.symbol}</b> - ${i.name}</div>`).join('');
             box.style.display = 'block';
         }
 
-        document.addEventListener('click', (e) => { if (!document.getElementById('searchContainer').contains(e.target)) document.getElementById('suggestions').style.display = 'none'; });
-        function selectTicker(s) { ticker = s; document.getElementById('tickerInput').value = s; document.getElementById('suggestions').style.display='none'; refreshData(); }
-        function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
+        document.addEventListener('click', (e) => { 
+            if (!document.getElementById('searchContainer').contains(e.target)) 
+                document.getElementById('suggestions').style.display = 'none'; 
+        });
+
+        function selectTicker(s) { 
+            ticker = s; 
+            document.getElementById('tickerInput').value = s; 
+            document.getElementById('suggestions').style.display='none'; 
+            refreshData(); 
+        }
+
+        function updateData(p, btn) { 
+            period = p; 
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); 
+            btn.classList.add('active-btn'); 
+            refreshData(); 
+        }
 
         async function refreshData() {
             document.getElementById('loader').classList.remove('hidden');
@@ -257,7 +267,8 @@
                 }], {
                     template: 'plotly_dark', paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                     margin: { t: 40, b: 20, l: 0, r: 40 }, hovermode: 'x unified',
-                    xaxis: { showgrid: false },
+                    annotations: [{ xref: 'paper', yref: 'paper', x: 1, y: 1.1, text: c.status, showarrow: false, font: { color: c.color, size: 10 } }],
+                    xaxis: { showgrid: false, spikemode: 'across', spikedash: 'dash', spikecolor: 'rgba(255,255,255,0.2)' },
                     yaxis: { side: 'right', showgrid: true, gridcolor: 'rgba(255,255,255,0.05)' }
                 }, { responsive: true, displayModeBar: false });
 
@@ -270,7 +281,12 @@
                 document.getElementById('f_div').innerText = f.div; document.getElementById('f_l52').innerText = f.l52;
             } catch (e) { console.error(e); } finally { setTimeout(() => document.getElementById('loader').classList.add('hidden'), 800); }
         }
-        window.onload = refreshData;
+
+        window.onload = () => {
+            updateAuthUI();
+            refreshData();
+        };
     </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
 </body>
 </html>

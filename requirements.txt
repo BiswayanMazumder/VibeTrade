@@ -6,3 +6,4 @@ plotly
 jinja2
 requests
 webauthn
+psycopg2-binary
