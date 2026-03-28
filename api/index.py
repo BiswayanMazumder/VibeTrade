@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 import requests
-from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi import FastAPI, Request, Query, HTTPException, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 
@@ -15,6 +15,100 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# =========================
+# 🔐 BREVO EMAIL CONFIG (ADDED)
+# =========================
+BREVO_API_KEY = "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"
+SENDER_EMAIL = "biswayanmazumder77@gmail.com"
+
+def send_welcome_email(to_email: str, username: str):
+    url = "https://api.brevo.com/v3/smtp/email"
+
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+
+    data = {
+        "sender": {
+            "name": "Vantedge",
+            "email": SENDER_EMAIL
+        },
+        "to": [
+            {"email": to_email, "name": username}
+        ],
+        "subject": "Welcome to Vantedge 🚀",
+        "htmlContent": f"""
+<div style="margin:0;padding:0;background:#050505;font-family:'Segoe UI',sans-serif;color:white">
+
+    <div style="max-width:600px;margin:40px auto;padding:30px;background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);border-radius:20px;backdrop-filter:blur(20px)">
+
+        <!-- LOGO / TITLE -->
+        <h1 style="font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:10px">
+            VANT<span style="color:#00ffbb">EDGE.</span>
+        </h1>
+
+        <!-- HERO -->
+        <h2 style="color:#00ffbb;font-size:20px;margin-top:20px">
+            Welcome {username} 👋
+        </h2>
+
+        <p style="color:#aaa;font-size:14px;line-height:1.6">
+            Your account is now live — you're officially inside the next-gen AI trading terminal.
+        </p>
+
+        <!-- HIGHLIGHT BOX -->
+        <div style="margin:25px 0;padding:20px;border-radius:16px;
+        background:linear-gradient(135deg, rgba(0,255,187,0.1), rgba(59,130,246,0.1));
+        border:1px solid rgba(0,255,187,0.2)">
+
+            <p style="margin:0;font-size:13px;color:#ddd">
+                ⚡ <b>What you can do now:</b>
+            </p>
+
+            <ul style="margin-top:10px;color:#bbb;font-size:13px;line-height:1.8">
+                <li>📈 Track real-time stock movements</li>
+                <li>🧠 Get AI-powered market insights</li>
+                <li>🔥 Discover trending assets instantly</li>
+                <li>⚡ Analyze hype vs fundamentals</li>
+            </ul>
+        </div>
+
+        <!-- CTA BUTTON -->
+        <div style="text-align:center;margin:30px 0">
+            <a href="http://vantedgee.me"
+               style="display:inline-block;padding:14px 28px;
+               background:#00ffbb;color:#000;font-weight:700;
+               border-radius:12px;text-decoration:none;
+               font-size:13px;letter-spacing:1px">
+               LAUNCH TERMINAL →
+            </a>
+        </div>
+
+        <!-- FOOTER -->
+        <p style="font-size:12px;color:#666;margin-top:30px;line-height:1.6">
+            You're receiving this email because you signed up for Vantedge.<br>
+            If this wasn’t you, please ignore this message.
+        </p>
+
+        <p style="font-size:11px;color:#444;margin-top:10px">
+            © 2026 Vantedge. Built for traders who move fast.
+        </p>
+
+    </div>
+</div>
+"""
+    }
+
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        if response.status_code != 201:
+            print("Brevo Error:", response.text)
+    except Exception as e:
+        print("Email Error:", e)
 
 # =========================
 # 🔐 NEON DB CONFIG
@@ -50,7 +144,7 @@ def create_token(data: dict):
 # =========================
 
 @app.post("/auth/register")
-async def register(username: str, email: str, password: str):
+async def register(username: str, email: str, password: str, background_tasks: BackgroundTasks):
     conn = get_db()
     cur = conn.cursor()
 
@@ -66,6 +160,9 @@ async def register(username: str, email: str, password: str):
             (username, email, hashed)
         )
         conn.commit()
+
+        # ✅ ONLY ADDITION (EMAIL)
+        background_tasks.add_task(send_welcome_email, email, username)
 
         return {"message": "User registered successfully"}
 
@@ -195,9 +292,6 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 num /= 1000.0
             return f"{num:.1f}T"
 
-        # =========================
-        # ✅ MARKET STATUS FIX
-        # =========================
         market_state = info.get("marketState", "").upper()
 
         if market_state == "REGULAR":
@@ -229,7 +323,7 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 "y": hist['Close'].tolist(),
                 "color": color,
                 "curr": curr,
-                "status": status  # ✅ FIXED HERE
+                "status": status
             }
         }
 
