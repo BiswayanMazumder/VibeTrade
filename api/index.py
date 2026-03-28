@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory="templates")
 # =========================
 # 🔐 BREVO EMAIL CONFIG (ADDED)
 # =========================
-BREVO_API_KEY = "API_KEY"
+BREVO_API_KEY = "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"
 SENDER_EMAIL = "biswayanmazumder77@gmail.com"
 
 def send_welcome_email(to_email: str, username: str):
