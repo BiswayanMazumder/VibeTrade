@@ -17,7 +17,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # =========================
-# 🔐 NEON DB CONFIG (DIT ONLY)
+# 🔐 NEON DB CONFIG
 # =========================
 DATABASE_URL = "postgresql://neondb_owner:npg_EzgCr7D5jiqf@ep-cold-flower-amfeo0n6-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
@@ -55,15 +55,12 @@ async def register(username: str, email: str, password: str):
     cur = conn.cursor()
 
     try:
-        # ✅ Check if user already exists
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         if cur.fetchone():
             raise HTTPException(status_code=400, detail="User already exists")
 
-        # ✅ Hash password
         hashed = hash_password(password)
 
-        # ✅ Insert into DB
         cur.execute(
             "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
             (username, email, hashed)
@@ -83,23 +80,18 @@ async def login(email: str, password: str):
     cur = conn.cursor()
 
     try:
-        # ✅ Fetch user
         cur.execute("SELECT id, password FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
 
-        # ❗ REQUIRED CHANGE
         if not user:
             raise HTTPException(status_code=404, detail="User does not exist")
 
         user_id, hashed_password = user
 
-        # ❗ PASSWORD CHECK
         if not verify_password(password, hashed_password):
             raise HTTPException(status_code=401, detail="Invalid password")
 
-        # ✅ Create token
         token = create_token({"user_id": user_id})
-
         return {"access_token": token}
 
     finally:
@@ -107,7 +99,7 @@ async def login(email: str, password: str):
         conn.close()
 
 # =========================
-# EXISTING STOCK SYSTEM (UNCHANGED)
+# STOCK SYSTEM
 # =========================
 
 CURRENCY_SYMBOLS = {'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥'}
@@ -126,7 +118,7 @@ def get_realtime_trending():
                 })
 
         if not trending:
-            fallback = ["RELIANCE.NS", "NVDA", "TCS.NS", "AAPL", "TSLA", "ZOMATO.NS", "HDFCBANK.NS"]
+            fallback = ["RELIANCE.NS", "NVDA", "TCS.NS", "AAPL", "TSLA"]
             for sym in fallback:
                 trending.append({"s": sym, "n": sym.replace(".NS", "")})
 
@@ -190,13 +182,11 @@ async def stream_data(ticker: str, period: str = Query("1d")):
         curr = info.get('currency', 'USD')
         sym = CURRENCY_SYMBOLS.get(curr, curr + " ")
 
-        # --- DATA EXTRACTION ---
         current_p = hist['Close'].iloc[-1]
         open_p = info.get('regularMarketOpen') or hist['Open'].iloc[0]
         change = ((current_p - open_p) / open_p) * 100
         color = '#00ffbb' if change >= 0 else '#ff3366'
 
-        # Helper to format numbers nicely (e.g., 1.2B instead of 1200000000)
         def format_big_num(num):
             if not num or num == "N/A": return "N/A"
             for unit in ['', 'K', 'M', 'B', 'T']:
@@ -205,6 +195,18 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 num /= 1000.0
             return f"{num:.1f}T"
 
+        # =========================
+        # ✅ MARKET STATUS FIX
+        # =========================
+        market_state = info.get("marketState", "").upper()
+
+        if market_state == "REGULAR":
+            status = "LIVE"
+        elif market_state in ["PRE", "POST"]:
+            status = "EXTENDED"
+        else:
+            status = "CLOSED"
+
         return {
             "symbol": ticker.upper(),
             "price": f"{current_p:,.2f}",
@@ -212,9 +214,8 @@ async def stream_data(ticker: str, period: str = Query("1d")):
             "change": f"{change:+.2f}%",
             "news": fetch_robust_news(ticker),
             "target": f"{sym}{info.get('targetMeanPrice', current_p*1.15):,.2f}",
-            "health": 70, 
+            "health": 70,
             "hype": 60,
-            # ✅ FILL THE FUNDAMENTALS HERE
             "fundamentals": {
                 "open": f"{sym}{open_p:,.2f}",
                 "mkt_cap": format_big_num(info.get('marketCap')),
@@ -228,8 +229,9 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 "y": hist['Close'].tolist(),
                 "color": color,
                 "curr": curr,
-                "status": "LIVE"
+                "status": status  # ✅ FIXED HERE
             }
         }
+
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
