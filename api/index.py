@@ -1,5 +1,7 @@
 import yfinance as yf
+import os
 import pandas as pd
+from dotenv import load_dotenv
 import plotly.graph_objects as go
 import plotly.io as pio
 import requests
@@ -12,15 +14,15 @@ import psycopg2
 import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
-
+load_dotenv()
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # =========================
 # 🔐 BREVO EMAIL CONFIG (ADDED)
 # =========================
-BREVO_API_KEY = "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"
-SENDER_EMAIL = "biswayanmazumder77@gmail.com"
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 
 def send_welcome_email(to_email: str, username: str):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -113,9 +115,9 @@ def send_welcome_email(to_email: str, username: str):
 # =========================
 # 🔐 NEON DB CONFIG
 # =========================
-DATABASE_URL = "postgresql://neondb_owner:npg_EzgCr7D5jiqf@ep-cold-flower-amfeo0n6-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-SECRET_KEY = "dev_secret_key"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 def get_db():
