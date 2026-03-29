@@ -54,22 +54,88 @@ def get_db():
 # 📧 EMAIL
 # =========================
 def send_welcome_email(to_email: str, username: str):
-    url = "https://api.api-key-key.brevo.com/v3/smtp/email"
+    url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "accept": "application/json",
         "api-key": BREVO_API_KEY,
         "content-type": "application/json"
     }
     data = {
-        "sender": {"name": "Vantedge", "email": SENDER_EMAIL},
-        "to": [{"email": to_email, "name": username}],
+        "sender": {
+            "name": "Vantedge",
+            "email": SENDER_EMAIL
+        },
+        "to": [
+            {"email": to_email, "name": username}
+        ],
         "subject": "Welcome to Vantedge 🚀",
-        "htmlContent": f"<h1>Welcome {username} 👋</h1><p>Your AI terminal is live</p>"
+        "htmlContent": f"""
+<div style="margin:0;padding:0;background:#050505;font-family:'Segoe UI',sans-serif;color:white">
+
+    <div style="max-width:600px;margin:40px auto;padding:30px;background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);border-radius:20px;backdrop-filter:blur(20px)">
+
+        <!-- LOGO / TITLE -->
+        <h1 style="font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:10px">
+            VANT<span style="color:#00ffbb">EDGE.</span>
+        </h1>
+
+        <!-- HERO -->
+        <h2 style="color:#00ffbb;font-size:20px;margin-top:20px">
+            Welcome {username} 👋
+        </h2>
+
+        <p style="color:#aaa;font-size:14px;line-height:1.6">
+            Your account is now live — you're officially inside the next-gen AI trading terminal.
+        </p>
+
+        <!-- HIGHLIGHT BOX -->
+        <div style="margin:25px 0;padding:20px;border-radius:16px;
+        background:linear-gradient(135deg, rgba(0,255,187,0.1), rgba(59,130,246,0.1));
+        border:1px solid rgba(0,255,187,0.2)">
+
+            <p style="margin:0;font-size:13px;color:#ddd">
+                ⚡ <b>What you can do now:</b>
+            </p>
+
+            <ul style="margin-top:10px;color:#bbb;font-size:13px;line-height:1.8">
+                <li>📈 Track real-time stock movements</li>
+                <li>🧠 Get AI-powered market insights</li>
+                <li>🔥 Discover trending assets instantly</li>
+                <li>⚡ Analyze hype vs fundamentals</li>
+            </ul>
+        </div>
+
+        <!-- CTA BUTTON -->
+        <div style="text-align:center;margin:30px 0">
+            <a href="http://vantedgee.me"
+               style="display:inline-block;padding:14px 28px;
+               background:#00ffbb;color:#000;font-weight:700;
+               border-radius:12px;text-decoration:none;
+               font-size:13px;letter-spacing:1px">
+               LAUNCH TERMINAL →
+            </a>
+        </div>
+
+        <!-- FOOTER -->
+        <p style="font-size:12px;color:#666;margin-top:30px;line-height:1.6">
+            You're receiving this email because you signed up for Vantedge.<br>
+            If this wasn’t you, please ignore this message.
+        </p>
+
+        <p style="font-size:11px;color:#444;margin-top:10px">
+            © 2026 Vantedge. Built for traders who move fast.
+        </p>
+
+    </div>
+</div>
+"""
     }
     try:
-        requests.post(url, json=data, headers=headers)
-    except:
-        pass
+        res = requests.post(url, json=data, headers=headers)
+        print("EMAIL STATUS:", res.status_code, res.text)
+    except Exception as e:
+        print("EMAIL ERROR:", e)
 
 # =========================
 # 🔐 AUTH HELPERS
