@@ -16,67 +16,43 @@
         .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
         #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
-        /* GEN-Z LOADER */
-.animate-glow {
-    background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb);
-    background-size: 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: glowMove 2s linear infinite;
-}
-
-@keyframes glowMove {
-    0% { background-position: 0% }
-    100% { background-position: 200% }
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    background: #00ffbb;
-    border-radius: 50%;
-    animation: bounce 0.6s infinite alternate;
-}
-
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.4s; }
-
-@keyframes bounce {
-    from { transform: translateY(0px); opacity: 0.5; }
-    to { transform: translateY(-10px); opacity: 1; }
-}
+        
+        .animate-glow { background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: glowMove 2s linear infinite; }
+        @keyframes glowMove { 0% { background-position: 0% } 100% { background-position: 200% } }
+        .dot { width: 10px; height: 10px; background: #00ffbb; border-radius: 50%; animation: bounce 0.6s infinite alternate; }
+        .delay-1 { animation-delay: 0.2s; } .delay-2 { animation-delay: 0.4s; }
+        @keyframes bounce { from { transform: translateY(0px); opacity: 0.5; } to { transform: translateY(-10px); opacity: 1; } }
+        
+        @keyframes pulse-once { 0% { opacity: 0; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
+        .animate-pulse-once { animation: pulse-once 0.3s ease-out forwards; }
+        #veraLogs::-webkit-scrollbar { width: 2px; }
+        #veraLogs::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); }
     </style>
 </head>
 <body>
-    <!-- GEN-Z LOADING SCREEN -->
-<div id="genzLoader" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black">
-    
-    <div class="text-center">
-        <h1 class="text-4xl font-black tracking-widest animate-glow">
-            VANT<span class="text-emerald-400">EDGE</span>
-        </h1>
-
-        <div class="mt-6 flex justify-center gap-2">
-            <div class="dot"></div>
-            <div class="dot delay-1"></div>
-            <div class="dot delay-2"></div>
+    <div id="genzLoader" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black">
+        <div class="text-center">
+            <h1 class="text-4xl font-black tracking-widest animate-glow">VANT<span class="text-emerald-400">EDGE</span></h1>
+            <div class="mt-6 flex justify-center gap-2">
+                <div class="dot"></div><div class="dot delay-1"></div><div class="dot delay-2"></div>
+            </div>
         </div>
     </div>
 
-</div>
-        <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
+    <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
+        <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
+    </div>
+
+    <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
         <div class="glass-card p-8 rounded-2xl w-[350px]">
             <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
             <input id="authEmail" placeholder="Email" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
-            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500 text-white">
             <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
             <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
             <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 text-black font-bold rounded-xl hover:scale-[1.02] transition-all">Continue</button>
             <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase hover:text-white">Switch Mode</p>
         </div>
-    </div>
-    <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
-        <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
     </div>
 
     <header id="mainHeader" class="flex justify-between items-center">
@@ -134,15 +110,41 @@
                 </div>
                 <div class="glass-card rounded-[2.5rem] p-8">
                     <p class="text-[10px] font-bold text-gray-500 mb-6 uppercase">Headline Stream</p>
-                    <div id="newsArea" class="space-y-4"></div>
+                    <div id="newsArea" class="space-y-4 text-xs italic"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="veraContainer" class="fixed bottom-6 right-6 z-[999999] flex flex-col items-end">
+        <div id="veraWindow" class="glass-card mb-4 w-80 h-[450px] rounded-[2.5rem] flex flex-col overflow-hidden hidden shadow-2xl border-emerald-500/20">
+            <div class="p-5 bg-emerald-500/10 border-b border-white/5 flex items-center justify-between">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="text-[10px] font-black tracking-[0.2em] text-white">SYSTEM: V.E.R.A.</span>
+                    </div>
+                    <span class="text-[8px] text-emerald-400/70 italic mt-1 font-mono">"The Edge is yours, sir."</span>
+                </div>
+                <button onclick="toggleVera()" class="text-gray-500 hover:text-white transition-colors">✕</button>
+            </div>
+            <div id="veraLogs" class="flex-1 p-5 overflow-y-auto text-[11px] font-mono space-y-4 scroll-smooth">
+                <div class="text-emerald-400/50 italic border-l border-emerald-500/20 pl-3">Uplink established. Awaiting ticker...</div>
+            </div>
+            <div class="p-5 border-t border-white/5 bg-black/40">
+                <input id="veraInput" onkeydown="if(event.key==='Enter') sendToVera()" placeholder="ENTER COMMAND (E.G. TSLA)..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-emerald-500 font-bold tracking-widest text-white transition-all uppercase">
+            </div>
+        </div>
+        <button onclick="toggleVera()" class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-110 active:scale-95 transition-all border-4 border-[#050505]">
+            <span class="text-black font-black text-[10px] tracking-tighter">V.E.R.A</span>
+        </button>
+    </div>
+
     <script>
         let ticker = "AAPL", period = "1d", lastScroll = 0, isLogin = true;
-                function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
+        const synth = window.speechSynthesis;
+
+        function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
         function toggleAuthMode() {
             isLogin = !isLogin;
             document.getElementById("authTitle").innerText = isLogin ? "LOGIN" : "REGISTER";
@@ -155,19 +157,16 @@
             const username = document.getElementById("authUsername").value;
             const error = document.getElementById("authError");
             let url = isLogin ? `/auth/login?email=${email}&password=${password}` : `/auth/register?username=${username}&email=${email}&password=${password}`;
-            loader.classList.remove("hidden");
-             error.classList.add("hidden");
+            document.getElementById('loader').classList.remove("hidden");
             try {
                 const res = await fetch(url, { method: "POST" });
                 const data = await res.json();
                 if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
                 if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
-                else { error.innerText = "Success! Now Login."; error.classList.add("success-text"); toggleAuthMode(); }
-            } catch (e) { error.innerText = "Network Error"; error.classList.remove("hidden"); }
-             finally { 
-            setTimeout(() => { loader.classList.add("hidden"); }, 400); // smooth feel }
+                else { error.innerText = "Success! Now Login."; toggleAuthMode(); }
+            } catch (e) { error.innerText = "Network Error"; }
+            finally { setTimeout(() => { document.getElementById('loader').classList.add("hidden"); }, 400); }
         }
-    }
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
         function updateAuthUI() {
@@ -175,45 +174,36 @@
             document.getElementById("loginBtn").classList.toggle("hidden", !!token);
             document.getElementById("logoutBtn").classList.toggle("hidden", !token);
         }
-        async function refreshData() {
-            document.getElementById('loader').classList.remove('hidden');
+
+        // Modified refreshData to support silent updates
+        async function refreshData(isSilent = false) {
+            if (!isSilent) document.getElementById('loader').classList.remove('hidden');
             try {
                 const res = await fetch(`/api/stream/${ticker}?period=${period}`);
                 const data = await res.json();
-                
                 document.getElementById('symbolDisplay').innerText = data.symbol;
-                document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 ml-2 font-normal">${data.currency_text}</span>`;
+                document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 ml-2 font-normal">${data.currency_text || 'USD'}</span>`;
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').style.color = parseFloat(data.change) >= 0 ? '#00ffbb' : '#ff3366';
                 document.getElementById('targetDisplay').innerText = data.target;
-
+                
                 setTimeout(() => {
                     document.getElementById('healthBar').style.height = `70%`;
                     document.getElementById('hypeBar').style.height = `60%`;
                 }, 100);
 
                 const c = data.chart_json;
-                const statusColor = c.is_live ? '#00ffbb' : '#ff3366';
-
                 Plotly.newPlot('chartContainer', [{
                     x: c.x, y: c.y, type: 'scatter', mode: 'lines',
-                    line: { color: statusColor, width: 2.5, shape: 'hv' },
-                    hovertemplate: `<b>%{y:,.2f}</b><br>%{x}<extra></extra>`
+                    line: { color: '#00ffbb', width: 2.5, shape: 'hv' }
                 }], {
                     template: 'plotly_dark', paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                    margin: { t: 40, b: 20, l: 0, r: 40 },
-                    annotations: [{
-                        xref: 'paper', yref: 'paper', x: 1, y: 1.1, text: c.status,
-                        showarrow: false, font: { color: statusColor, size: 10, weight: 'bold' }
-                    }],
-                    xaxis: { showgrid: false },
+                    margin: { t: 40, b: 20, l: 0, r: 40 }, xaxis: { showgrid: false },
                     yaxis: { side: 'right', showgrid: true, gridcolor: 'rgba(255,255,255,0.05)' }
                 }, { responsive: true, displayModeBar: false });
 
-                document.getElementById('newsArea').innerHTML = data.news.map(n => 
-                    `<a href="${n.link}" target="_blank" class="block text-[11px] hover:text-emerald-400 italic underline decoration-white/5">${n.title}</a>`
-                ).join('');
-
+                document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block hover:text-emerald-400 underline decoration-white/5">${n.title}</a>`).join('');
+                
                 const f = data.fundamentals;
                 document.getElementById('f_open').innerText = f.open;
                 document.getElementById('f_mkt').innerText = f.mkt_cap;
@@ -221,22 +211,19 @@
                 document.getElementById('f_h52').innerText = f.high_52w;
                 document.getElementById('f_div').innerText = f.dividend;
                 document.getElementById('f_l52').innerText = f.low_52w;
-
-            } catch (e) { console.error(e); } finally { setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500); }
+            } catch (e) { console.error(e); } 
+            finally { if (!isSilent) setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500); }
         }
 
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
             const rect = document.getElementById('tickerInput').getBoundingClientRect();
-            box.style.top = `${rect.bottom + window.scrollY + 8}px`; 
-            box.style.left = `${rect.left}px`; box.style.width = `${rect.width}px`;
-
+            box.style.top = `${rect.bottom + window.scrollY + 8}px`; box.style.left = `${rect.left}px`; box.style.width = `${rect.width}px`;
             const endpoint = q === '' ? '/api/context' : `/api/search/${q}`;
             try {
                 const res = await fetch(endpoint);
                 const data = await res.json();
                 const list = q === '' ? data.trending : data;
-                
                 if (list.length > 0) {
                     box.innerHTML = list.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs flex justify-between"><span><b class="text-emerald-400">${i.symbol}</b> - ${i.name}</span></div>`).join('');
                     box.style.display = 'block';
@@ -244,28 +231,58 @@
             } catch { box.style.display = 'none'; }
         }
 
-        function selectTicker(s) { ticker = s; refreshData(); document.getElementById('suggestions').style.display='none'; }
+        function selectTicker(s, isSilent = false) { ticker = s; refreshData(isSilent); document.getElementById('suggestions').style.display='none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
-        window.onload = () => {
-    try { updateAuthUI(); } catch(e){}
-    try { refreshData(); } catch(e){}
-
-    // 🔥 Hide GEN-Z loader
-    setTimeout(() => {
-        const loader = document.getElementById("genzLoader");
-        if(loader){
-            loader.style.opacity = "0";
-            loader.style.transition = "opacity 0.5s ease";
-            setTimeout(() => loader.remove(), 500);
+        // --- V.E.R.A. FUNCTIONS ---
+        function toggleVera() {
+            const win = document.getElementById('veraWindow');
+            win.classList.toggle('hidden');
+            if(!win.classList.contains('hidden')) document.getElementById('veraInput').focus();
         }
-    }, 800); // delay for vibe
-};
-        window.addEventListener("scroll", () => {
-            let curr = window.pageYOffset;
-            document.getElementById("mainHeader").classList.toggle("header-hidden", curr > lastScroll && curr > 60);
-            lastScroll = curr;
-        });
+
+        function speakVera(text) {
+            if (!synth) return;
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text.replace(/\[V\.E\.R\.A\.\]:/g, ""));
+            const voices = synth.getVoices();
+            utter.voice = voices.find(v => v.name.includes('Google UK English Male')) || voices[0];
+            utter.pitch = 0.85; utter.rate = 1.0;
+            synth.speak(utter);
+        }
+
+        async function sendToVera() {
+            const input = document.getElementById('veraInput');
+            const logs = document.getElementById('veraLogs');
+            const val = input.value.trim();
+            if(!val) return;
+            logs.innerHTML += `<div class="text-white/30 text-right text-[9px] uppercase mt-4">>> ${val}</div>`;
+            input.value = '';
+            try {
+                const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message: val}) });
+                const data = await res.json();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = "text-emerald-400 bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10 mb-2 animate-pulse-once mt-2";
+                msgDiv.innerText = data.response;
+                logs.appendChild(msgDiv);
+                logs.scrollTop = logs.scrollHeight;
+                speakVera(data.response);
+
+                // 🔥 SILENT UPDATE TRIGGER (Added 'true' parameter)
+                if (data.response.includes("Scanning") || data.response.includes("Analysis complete")) {
+                    const match = val.match(/\b[A-Z]{1,5}\b/i);
+                    if(match) selectTicker(match[0].toUpperCase(), true); 
+                }
+            } catch(e) { logs.innerHTML += `<div class="text-red-500/50 text-[9px] mt-2">[ERROR: UPLINK FAILED]</div>`; }
+        }
+
+        window.onload = () => {
+            updateAuthUI(); refreshData();
+            setTimeout(() => {
+                const ldr = document.getElementById("genzLoader");
+                if(ldr) { ldr.style.opacity = "0"; setTimeout(() => ldr.remove(), 500); }
+            }, 800);
+        };
     </script>
 </body>
 </html>

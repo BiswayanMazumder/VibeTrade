@@ -138,6 +138,64 @@ def send_welcome_email(to_email: str, username: str):
         print("EMAIL ERROR:", e)
 
 # =========================
+# 🤖 ENHANCED V.E.R.A. (yfinance Analytics)
+# =========================
+@app.post("/api/chat")
+async def chat_vera(request: Request):
+    data = await request.json()
+    user_msg = data.get("message", "").strip().upper()
+    
+    import re
+    # Look for 1-5 character uppercase words (Tickers)
+    tickers = re.findall(r'\b[A-Z]{1,5}\b', user_msg)
+    
+    if tickers:
+        ticker_to_scan = tickers[0]
+        try: 
+            stock = yf.Ticker(ticker_to_scan)
+            # Fetching more detailed fast_info
+            info = stock.fast_info
+            
+            price = info['last_price']
+            change_pct = ((price - info['previous_close']) / info['previous_close']) * 100
+            day_high = info['day_high']
+            day_low = info['day_low']
+            vol = info['last_volume']
+            currency = info['currency']
+
+            # Formulating a detailed "Jarvis" style report
+            trend = "Bullish 📈" if change_pct > 0 else "Bearish 📉"
+            
+            detailed_response = (
+                f"[V.E.R.A.]: Uplink Successful. Scanning {ticker_to_scan} vectors... \n\n"
+                f"• Current Price: {price:.2f} {currency} ({change_pct:+.2f}%)\n"
+                f"• Session Trend: {trend}\n"
+                f"• Range: L {day_low:.2f} — H {day_high:.2f}\n"
+                f"• Volatility: {'High' if abs(change_pct) > 2 else 'Stable'}\n\n"
+                f"Terminal synchronized. HUD layers updated with {ticker_to_scan} fundamental data, sir."
+            )
+            
+            return {"response": detailed_response}
+            
+        except Exception:
+            # Fall through if ticker is invalid or API fails
+            pass
+
+    # 2. Detailed Personality Responses
+    personality_responses = {
+        "HELLO": "Systems online, sir. V.E.R.A. at your service. Intelligence core initialized. Which sector are we analyzing today?",
+        "STATUS": "Diagnostic complete. Data streams from Yahoo Finance, The Guardian, and Neon DB are synchronized. Latency is optimal at 24ms.",
+        "HELP": "I am your Real-time Analyst core. Provide any valid ticker (e.g., TSLA, BTC-USD, NVDA) and I will execute a deep-packet scan of its session metrics.",
+    }
+
+    # Enhanced generic fallback
+    reply = personality_responses.get(user_msg, 
+        "Logic circuits processing... I am currently monitoring global market vectors and detecting micro-volatility. "
+        "Please provide a specific ticker symbol to focus the HUD's technical overlays."
+    )
+    
+    return {"response": f"[V.E.R.A.]: {reply}"}
+# =========================
 # 🔐 AUTH HELPERS
 # =========================
 def hash_password(password: str):
