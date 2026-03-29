@@ -35,13 +35,13 @@ def send_welcome_email(to_email: str, username: str):
 
     data = {
         "sender": {
-            "name": "Vantedge",
+            "name": "Vantedgee",
             "email": SENDER_EMAIL
         },
         "to": [
             {"email": to_email, "name": username}
         ],
-        "subject": "Welcome to Vantedge 🚀",
+        "subject": "Welcome to Vantedgee 🚀",
         "htmlContent": f"""
 <div style="margin:0;padding:0;background:#050505;font-family:'Segoe UI',sans-serif;color:white">
 
