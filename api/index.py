@@ -211,11 +211,31 @@ async def home(request: Request):
 @app.get("/api/context")
 async def context_api():
     try:
-        s = yf.Search("Most Active", max_results=8)
-        trending = [{"s": q['symbol'], "n": q.get('shortname', q['symbol'])} for q in s.quotes]
-        return JSONResponse(content={"trending": trending})
+        s = yf.Search("AAPL", max_results=8)  # safer query
+        quotes = s.quotes if s.quotes else []
+
+        if not quotes:
+            raise Exception("Empty search")
+
+        trending = [
+            {"symbol": q['symbol'], "name": q.get('shortname', q['symbol'])}
+            for q in quotes
+        ]
+
+        return {"trending": trending}
+
     except:
-        return JSONResponse(content={"trending": [{"s": "AAPL", "n": "Apple"}]})
+        # ✅ fallback (VERY IMPORTANT)
+        return {
+            "trending": [
+                {"s": "AAPL", "n": "Apple"},
+                {"s": "TSLA", "n": "Tesla"},
+                {"s": "MSFT", "n": "Microsoft"},
+                {"s": "GOOGL", "n": "Google"},
+                {"s": "AMZN", "n": "Amazon"},
+                {"s": "NVDA", "n": "NVIDIA"}
+            ]
+        }
 
 @app.get("/api/search/{query}")
 async def search(query: str):
