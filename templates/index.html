@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 150vh; padding-top: 130px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 150vh; padding-top: 130px; overflow-x: hidden; }
         header { position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(25px); padding: 1.5rem 3rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.4s; }
         .header-hidden { transform: translateY(-100%); }
         .glass-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; }
@@ -16,22 +16,9 @@
         .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
         #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
-        .active-btn { color: #60a5fa !important; border-bottom: 2px solid #60a5fa; }
     </style>
 </head>
 <body>
-
-    <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
-        <div class="glass-card p-8 rounded-2xl w-[350px]">
-            <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
-            <input id="authEmail" placeholder="Email" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
-            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
-            <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
-            <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
-            <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 text-black font-bold rounded-xl hover:scale-[1.02] transition-all">Continue</button>
-            <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase hover:text-white">Switch Mode</p>
-        </div>
-    </div>
 
     <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
         <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
@@ -40,19 +27,16 @@
     <header id="mainHeader" class="flex justify-between items-center">
         <h1 class="text-2xl font-black italic uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
         <div class="flex items-center gap-6" id="searchContainer">
-            <div class="relative">
-                <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
-                <div id="suggestions"></div>
-            </div>
-            <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold bg-white/5 px-6 py-3 rounded-xl border border-white/10">Login</button>
-            <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden border border-red-500/20">Sign Out</button>
+            <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
+            <div id="suggestions"></div>
+            <button class="text-[10px] font-bold bg-white/5 px-6 py-3 rounded-xl border border-white/10">LOGIN</button>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 glass-card rounded-[3rem] p-10">
-                <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase mb-1">---</p>
+                <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase">---</p>
                 <h2 id="priceDisplay" class="text-6xl font-extrabold italic tracking-tighter">0.00</h2>
                 <span id="changeDisplay" class="text-xl font-bold">0.00%</span>
 
@@ -101,32 +85,7 @@
     </div>
 
     <script>
-        let ticker = "AAPL", period = "1d", lastScroll = 0, isLogin = true;
-
-        function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
-        function toggleAuthMode() {
-            isLogin = !isLogin;
-            document.getElementById("authTitle").innerText = isLogin ? "LOGIN" : "REGISTER";
-            document.getElementById("authUsername").classList.toggle("hidden", isLogin);
-        }
-
-        async function submitAuth() {
-            const email = document.getElementById("authEmail").value;
-            const password = document.getElementById("authPassword").value;
-            const username = document.getElementById("authUsername").value;
-            const error = document.getElementById("authError");
-            let url = isLogin ? `/auth/login?email=${email}&password=${password}` : `/auth/register?username=${username}&email=${email}&password=${password}`;
-            
-            try {
-                const res = await fetch(url, { method: "POST" });
-                const data = await res.json();
-                if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
-                if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
-                else { error.innerText = "Success! Now Login."; error.classList.add("text-emerald-400"); toggleAuthMode(); }
-            } catch { error.innerText = "Error Connecting"; }
-        }
-
-        function logout() { localStorage.removeItem("token"); location.reload(); }
+        let ticker = "AAPL", period = "1d", lastScroll = 0;
 
         async function refreshData() {
             document.getElementById('loader').classList.remove('hidden');
@@ -138,10 +97,11 @@
                 document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 ml-2 font-normal">${data.currency_text}</span>`;
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').style.color = parseFloat(data.change) >= 0 ? '#00ffbb' : '#ff3366';
+                document.getElementById('targetDisplay').innerText = data.target;
 
                 setTimeout(() => {
-                    document.getElementById('healthBar').style.height = `${data.health}%`;
-                    document.getElementById('hypeBar').style.height = `${data.hype}%`;
+                    document.getElementById('healthBar').style.height = `70%`;
+                    document.getElementById('hypeBar').style.height = `60%`;
                 }, 100);
 
                 const c = data.chart_json;
@@ -162,7 +122,6 @@
                     yaxis: { side: 'right', showgrid: true, gridcolor: 'rgba(255,255,255,0.05)' }
                 }, { responsive: true, displayModeBar: false });
 
-                document.getElementById('targetDisplay').innerText = data.target;
                 document.getElementById('newsArea').innerHTML = data.news.map(n => 
                     `<a href="${n.link}" target="_blank" class="block text-[11px] hover:text-emerald-400 italic underline decoration-white/5">${n.title}</a>`
                 ).join('');
@@ -181,29 +140,26 @@
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
             const rect = document.getElementById('tickerInput').getBoundingClientRect();
-            box.style.top = `${rect.bottom + window.scrollY + 10}px`; 
+            box.style.top = `${rect.bottom + window.scrollY + 8}px`; 
             box.style.left = `${rect.left}px`; box.style.width = `${rect.width}px`;
 
-            if (q === '') {
-                const res = await fetch('/api/context'); const d = await res.json();
-                box.innerHTML = d.trending.map(i => `<div onclick="selectTicker('${i.s}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs"><b class="text-emerald-400">${i.s}</b> - ${i.n}</div>`).join('');
-            } else {
-                const res = await fetch(`/api/search/${q}`); const d = await res.json();
-                box.innerHTML = d.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs"><b class="text-emerald-400">${i.symbol}</b> - ${i.name}</div>`).join('');
-            }
-            box.style.display = 'block';
+            const endpoint = q === '' ? '/api/context' : `/api/search/${q}`;
+            try {
+                const res = await fetch(endpoint);
+                const data = await res.json();
+                const list = q === '' ? data.trending : data;
+                
+                if (list.length > 0) {
+                    box.innerHTML = list.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs flex justify-between"><span><b class="text-emerald-400">${i.symbol}</b> - ${i.name}</span></div>`).join('');
+                    box.style.display = 'block';
+                } else { box.style.display = 'none'; }
+            } catch { box.style.display = 'none'; }
         }
 
         function selectTicker(s) { ticker = s; refreshData(); document.getElementById('suggestions').style.display='none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
-        window.onload = () => {
-            const token = localStorage.getItem("token");
-            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
-            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
-            refreshData();
-        };
-
+        window.onload = refreshData;
         window.addEventListener("scroll", () => {
             let curr = window.pageYOffset;
             document.getElementById("mainHeader").classList.toggle("header-hidden", curr > lastScroll && curr > 60);
