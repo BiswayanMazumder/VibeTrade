@@ -19,7 +19,17 @@
     </style>
 </head>
 <body>
-
+        <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
+        <div class="glass-card p-8 rounded-2xl w-[350px]">
+            <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
+            <input id="authEmail" placeholder="Email" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
+            <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
+            <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 text-black font-bold rounded-xl hover:scale-[1.02] transition-all">Continue</button>
+            <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase hover:text-white">Switch Mode</p>
+        </div>
+    </div>
     <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
         <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
     </div>
@@ -29,7 +39,8 @@
         <div class="flex items-center gap-6" id="searchContainer">
             <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
             <div id="suggestions"></div>
-            <button class="text-[10px] font-bold bg-white/5 px-6 py-3 rounded-xl border border-white/10">LOGIN</button>
+            <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
+            <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden">Sign Out</button>
         </div>
     </header>
 
@@ -85,8 +96,36 @@
     </div>
 
     <script>
-        let ticker = "AAPL", period = "1d", lastScroll = 0;
+        let ticker = "AAPL", period = "1d", lastScroll = 0, isLogin = true;
+                function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            document.getElementById("authTitle").innerText = isLogin ? "LOGIN" : "REGISTER";
+            document.getElementById("authUsername").classList.toggle("hidden", isLogin);
+        }
 
+        async function submitAuth() {
+            const email = document.getElementById("authEmail").value;
+            const password = document.getElementById("authPassword").value;
+            const username = document.getElementById("authUsername").value;
+            const error = document.getElementById("authError");
+            let url = isLogin ? `/auth/login?email=${email}&password=${password}` : `/auth/register?username=${username}&email=${email}&password=${password}`;
+            
+            try {
+                const res = await fetch(url, { method: "POST" });
+                const data = await res.json();
+                if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
+                if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
+                else { error.innerText = "Success! Now Login."; error.classList.add("success-text"); toggleAuthMode(); }
+            } catch { error.innerText = "Network Error"; }
+        }
+
+        function logout() { localStorage.removeItem("token"); location.reload(); }
+        function updateAuthUI() {
+            const token = localStorage.getItem("token");
+            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
+            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
+        }
         async function refreshData() {
             document.getElementById('loader').classList.remove('hidden');
             try {
@@ -159,7 +198,7 @@
         function selectTicker(s) { ticker = s; refreshData(); document.getElementById('suggestions').style.display='none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
-        window.onload = refreshData;
+         window.onload = () => { updateAuthUI(); refreshData(); };
         window.addEventListener("scroll", () => {
             let curr = window.pageYOffset;
             document.getElementById("mainHeader").classList.toggle("header-hidden", curr > lastScroll && curr > 60);
