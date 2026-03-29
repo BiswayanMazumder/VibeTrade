@@ -12,4 +12,3 @@ python-jose[cryptography]
 passlib[bcrypt]
 uvicorn
 python-dotenv
-time
