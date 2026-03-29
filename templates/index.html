@@ -155,15 +155,19 @@
             const username = document.getElementById("authUsername").value;
             const error = document.getElementById("authError");
             let url = isLogin ? `/auth/login?email=${email}&password=${password}` : `/auth/register?username=${username}&email=${email}&password=${password}`;
-            
+            loader.classList.remove("hidden");
+             error.classList.add("hidden");
             try {
                 const res = await fetch(url, { method: "POST" });
                 const data = await res.json();
                 if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
                 if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
                 else { error.innerText = "Success! Now Login."; error.classList.add("success-text"); toggleAuthMode(); }
-            } catch { error.innerText = "Network Error"; }
+            } catch (e) { error.innerText = "Network Error"; error.classList.remove("hidden"); }
+             finally { 
+            setTimeout(() => { loader.classList.add("hidden"); }, 400); // smooth feel }
         }
+    }
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
         function updateAuthUI() {
