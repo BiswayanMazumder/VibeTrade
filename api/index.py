@@ -1,6 +1,7 @@
 import yfinance as yf
 import os
 import pandas as pd
+import time
 from dotenv import load_dotenv
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -14,109 +15,22 @@ import psycopg2
 import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
+
 load_dotenv()
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+# --- NEWS CACHE CONFIG ---
+news_cache = {}
+CACHE_DURATION = 3600  # 1 Hour Cache
+
 # =========================
-# 🔐 BREVO EMAIL CONFIG (ADDED)
+# 🔐 CONFIG & HELPERS
 # =========================
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
-
-def send_welcome_email(to_email: str, username: str):
-    url = "https://api.brevo.com/v3/smtp/email"
-
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json"
-    }
-
-    data = {
-        "sender": {
-            "name": "Vantedge",
-            "email": SENDER_EMAIL
-        },
-        "to": [
-            {"email": to_email, "name": username}
-        ],
-        "subject": "Welcome to Vantedge 🚀",
-        "htmlContent": f"""
-<div style="margin:0;padding:0;background:#050505;font-family:'Segoe UI',sans-serif;color:white">
-
-    <div style="max-width:600px;margin:40px auto;padding:30px;background:rgba(255,255,255,0.03);
-    border:1px solid rgba(255,255,255,0.08);border-radius:20px;backdrop-filter:blur(20px)">
-
-        <!-- LOGO / TITLE -->
-        <h1 style="font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:10px">
-            VANT<span style="color:#00ffbb">EDGE.</span>
-        </h1>
-
-        <!-- HERO -->
-        <h2 style="color:#00ffbb;font-size:20px;margin-top:20px">
-            Welcome {username} 👋
-        </h2>
-
-        <p style="color:#aaa;font-size:14px;line-height:1.6">
-            Your account is now live — you're officially inside the next-gen AI trading terminal.
-        </p>
-
-        <!-- HIGHLIGHT BOX -->
-        <div style="margin:25px 0;padding:20px;border-radius:16px;
-        background:linear-gradient(135deg, rgba(0,255,187,0.1), rgba(59,130,246,0.1));
-        border:1px solid rgba(0,255,187,0.2)">
-
-            <p style="margin:0;font-size:13px;color:#ddd">
-                ⚡ <b>What you can do now:</b>
-            </p>
-
-            <ul style="margin-top:10px;color:#bbb;font-size:13px;line-height:1.8">
-                <li>📈 Track real-time stock movements</li>
-                <li>🧠 Get AI-powered market insights</li>
-                <li>🔥 Discover trending assets instantly</li>
-                <li>⚡ Analyze hype vs fundamentals</li>
-            </ul>
-        </div>
-
-        <!-- CTA BUTTON -->
-        <div style="text-align:center;margin:30px 0">
-            <a href="http://vantedgee.me"
-               style="display:inline-block;padding:14px 28px;
-               background:#00ffbb;color:#000;font-weight:700;
-               border-radius:12px;text-decoration:none;
-               font-size:13px;letter-spacing:1px">
-               LAUNCH TERMINAL →
-            </a>
-        </div>
-
-        <!-- FOOTER -->
-        <p style="font-size:12px;color:#666;margin-top:30px;line-height:1.6">
-            You're receiving this email because you signed up for Vantedge.<br>
-            If this wasn’t you, please ignore this message.
-        </p>
-
-        <p style="font-size:11px;color:#444;margin-top:10px">
-            © 2026 Vantedge. Built for traders who move fast.
-        </p>
-
-    </div>
-</div>
-"""
-    }
-
-    try:
-        response = requests.post(url, json=data, headers=headers)
-        if response.status_code != 201:
-            print("Brevo Error:", response.text)
-    except Exception as e:
-        print("Email Error:", e)
-
-# =========================
-# 🔐 NEON DB CONFIG
-# =========================
+GUARDIAN_API_KEY = os.getenv("GUARDIAN_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
@@ -127,9 +41,23 @@ def get_db():
         print("DB ERROR:", e)
         raise HTTPException(status_code=500, detail="Database connection failed")
 
-# =========================
-# 🔐 AUTH HELPERS
-# =========================
+def send_welcome_email(to_email: str, username: str):
+    url = "https://api.api-key-key.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    data = {
+        "sender": {"name": "Vantedge", "email": SENDER_EMAIL},
+        "to": [{"email": to_email, "name": username}],
+        "subject": "Welcome to Vantedge 🚀",
+        "htmlContent": f"<h1>Welcome {username} 👋</h1><p>Your AI terminal is live at vantedgee.me</p>"
+    }
+    try:
+        requests.post(url, json=data, headers=headers)
+    except: pass
+
 def hash_password(password: str):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
@@ -142,130 +70,98 @@ def create_token(data: dict):
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 # =========================
-# 🔐 AUTH ROUTES
+# 📈 SMART NEWS FETCH (CACHED)
 # =========================
+def fetch_guardian_news(ticker):
+    current_time = time.time()
+    clean_query = ticker.upper().split('.')[0] # e.g. TCS.NS -> TCS
 
-@app.post("/auth/register")
-async def register(username: str, email: str, password: str, background_tasks: BackgroundTasks):
-    conn = get_db()
-    cur = conn.cursor()
+    # 1. Check Cache
+    if clean_query in news_cache:
+        cached = news_cache[clean_query]
+        if current_time - cached['timestamp'] < CACHE_DURATION:
+            return cached['articles']
+
+    # 2. Call API if no cache/expired
+    url = "https://content.guardianapis.com/search"
+    params = {
+        "q": clean_query,
+        "section": "business",
+        "order-by": "newest",
+        "api-key": GUARDIAN_API_KEY
+    }
 
     try:
+        res = requests.get(url, params=params, timeout=5).json()
+        results = res.get('response', {}).get('results', [])
+        
+        news_articles = []
+        for item in results[:4]:
+            news_articles.append({
+                "title": item['webTitle'],
+                "link": item['webUrl']
+            })
+
+        if news_articles:
+            news_cache[clean_query] = {
+                "timestamp": current_time,
+                "articles": news_articles
+            }
+        return news_articles if news_articles else [{"title": f"No news for {ticker}", "link": "#"}]
+    except:
+        return news_cache.get(clean_query, {}).get('articles', [{"title": "News sync error", "link": "#"}])
+
+# =========================
+# 🔐 AUTH ROUTES
+# =========================
+@app.post("/auth/register")
+async def register(username: str, email: str, password: str, background_tasks: BackgroundTasks):
+    conn = get_db(); cur = conn.cursor()
+    try:
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
-        if cur.fetchone():
-            raise HTTPException(status_code=400, detail="User already exists")
-
+        if cur.fetchone(): raise HTTPException(status_code=400, detail="User exists")
         hashed = hash_password(password)
-
-        cur.execute(
-            "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-            (username, email, hashed)
-        )
+        cur.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, %s)", (username, email, hashed))
         conn.commit()
-
-        # ✅ ONLY ADDITION (EMAIL)
         background_tasks.add_task(send_welcome_email, email, username)
-
         return {"message": "User registered successfully"}
-
-    finally:
-        cur.close()
-        conn.close()
-
+    finally: cur.close(); conn.close()
 
 @app.post("/auth/login")
 async def login(email: str, password: str):
-    conn = get_db()
-    cur = conn.cursor()
-
+    conn = get_db(); cur = conn.cursor()
     try:
         cur.execute("SELECT id, password FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
-
-        if not user:
-            raise HTTPException(status_code=404, detail="User does not exist")
-
-        user_id, hashed_password = user
-
-        if not verify_password(password, hashed_password):
-            raise HTTPException(status_code=401, detail="Invalid password")
-
-        token = create_token({"user_id": user_id})
-        return {"access_token": token}
-
-    finally:
-        cur.close()
-        conn.close()
+        if not user or not verify_password(password, user[1]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        return {"access_token": create_token({"user_id": user[0]})}
+    finally: cur.close(); conn.close()
 
 # =========================
-# STOCK SYSTEM
+# 📊 STOCK ROUTES
 # =========================
-
 CURRENCY_SYMBOLS = {'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥'}
-
-def get_realtime_trending():
-    try:
-        s = yf.Search("Most Active", max_results=12)
-        trending = []
-
-        for quote in s.quotes:
-            symbol = quote.get('symbol')
-            if symbol and ('.' not in symbol or symbol.endswith(".NS") or symbol.endswith(".BO")):
-                trending.append({
-                    "s": symbol,
-                    "n": quote.get('shortname') or quote.get('longname') or symbol
-                })
-
-        if not trending:
-            fallback = ["RELIANCE.NS", "NVDA", "TCS.NS", "AAPL", "TSLA"]
-            for sym in fallback:
-                trending.append({"s": sym, "n": sym.replace(".NS", "")})
-
-        return trending[:8]
-
-    except Exception as e:
-        print(f"Trending Error: {e}")
-        return [{"s": "NVDA", "n": "NVIDIA"}]
-
-
-def fetch_robust_news(ticker):
-    news = []
-    ticker_clean = ticker.upper().split('.')[0]
-
-    try:
-        url = f"https://query1.finance.yahoo.com/v1/finance/search?q={ticker}"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        res = requests.get(url, headers=headers, timeout=5).json()
-
-        for item in res.get('news', [])[:4]:
-            related = [t.upper() for t in item.get('relatedTickers', [])]
-            if ticker_clean in related or ticker_clean in item.get('title', '').upper():
-                news.append({"title": item['title'], "link": item['link']})
-
-    except:
-        pass
-
-    return news if news else [{"title": f"No news for {ticker.upper()}", "link": "#"}]
-
 
 @app.get("/")
 async def home(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
-
 @app.get("/api/context")
 async def context_api():
-    return JSONResponse(content={"trending": get_realtime_trending()})
-
+    try:
+        s = yf.Search("Most Active", max_results=8)
+        trending = [{"s": q['symbol'], "n": q.get('shortname', q['symbol'])} for q in s.quotes]
+        return JSONResponse(content={"trending": trending})
+    except:
+        return JSONResponse(content={"trending": [{"s": "AAPL", "n": "Apple"}]})
 
 @app.get("/api/search/{query}")
 async def search(query: str):
     try:
         s = yf.Search(query, max_results=8)
         return [{"symbol": q['symbol'], "name": q.get('shortname', 'Asset')} for q in s.quotes]
-    except:
-        return []
-
+    except: return []
 
 @app.get("/api/stream/{ticker}")
 async def stream_data(ticker: str, period: str = Query("1d")):
@@ -273,9 +169,7 @@ async def stream_data(ticker: str, period: str = Query("1d")):
         stock = yf.Ticker(ticker)
         interval = "1m" if period in ["1d", "5d"] else "1d"
         hist = stock.history(period=period, interval=interval)
-
-        if hist.empty:
-            return JSONResponse({"error": "No Data"}, status_code=404)
+        if hist.empty: return JSONResponse({"error": "No Data"}, status_code=404)
 
         info = stock.info
         curr = info.get('currency', 'USD')
@@ -284,34 +178,28 @@ async def stream_data(ticker: str, period: str = Query("1d")):
         current_p = hist['Close'].iloc[-1]
         open_p = info.get('regularMarketOpen') or hist['Open'].iloc[0]
         change = ((current_p - open_p) / open_p) * 100
-        color = '#00ffbb' if change >= 0 else '#ff3366'
+
+        # Market Status Logic
+        m_state = info.get("marketState", "").upper()
+        if m_state == "REGULAR": status = "LIVE"; is_live = True
+        elif m_state in ["PRE", "POST"]: status = "EXTENDED"; is_live = True
+        else: status = "CLOSED"; is_live = False
 
         def format_big_num(num):
             if not num or num == "N/A": return "N/A"
             for unit in ['', 'K', 'M', 'B', 'T']:
-                if abs(num) < 1000.0:
-                    return f"{num:3.1f}{unit}"
+                if abs(num) < 1000.0: return f"{num:3.1f}{unit}"
                 num /= 1000.0
             return f"{num:.1f}T"
-
-        market_state = info.get("marketState", "").upper()
-
-        if market_state == "REGULAR":
-            status = "LIVE"
-        elif market_state in ["PRE", "POST"]:
-            status = "EXTENDED"
-        else:
-            status = "CLOSED"
 
         return {
             "symbol": ticker.upper(),
             "price": f"{current_p:,.2f}",
             "currency_text": curr,
             "change": f"{change:+.2f}%",
-            "news": fetch_robust_news(ticker),
+            "news": fetch_guardian_news(ticker), # CACHED NEWS
             "target": f"{sym}{info.get('targetMeanPrice', current_p*1.15):,.2f}",
-            "health": 70,
-            "hype": 60,
+            "health": 70, "hype": 60,
             "fundamentals": {
                 "open": f"{sym}{open_p:,.2f}",
                 "mkt_cap": format_big_num(info.get('marketCap')),
@@ -323,11 +211,10 @@ async def stream_data(ticker: str, period: str = Query("1d")):
             "chart_json": {
                 "x": hist.index.strftime('%Y-%m-%d %H:%M:%S').tolist(),
                 "y": hist['Close'].tolist(),
-                "color": color,
                 "curr": curr,
-                "status": status
+                "status": status,
+                "is_live": is_live
             }
         }
-
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
