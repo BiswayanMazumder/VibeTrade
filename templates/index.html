@@ -9,19 +9,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 150vh; padding-top: 130px; }
-        header { position: fixed; top: 0; left: 0; width: 100%; transition: transform 0.4s; z-index: 9999; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(25px); padding: 1.5rem 3rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        header { position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(25px); padding: 1.5rem 3rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.4s; }
         .header-hidden { transform: translateY(-100%); }
         .glass-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; }
         .stat-bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 1.5s ease-out; min-height: 4px; }
         .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
-        #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; }
+        #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
         .active-btn { color: #60a5fa !important; border-bottom: 2px solid #60a5fa; }
-        @keyframes gradientFlow { 0% { background-position: 0% } 100% { background-position: 200% } }
-        .success-text { background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: gradientFlow 2s linear infinite; font-weight: 800; }
     </style>
 </head>
 <body>
+
     <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
         <div class="glass-card p-8 rounded-2xl w-[350px]">
             <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
@@ -38,24 +37,26 @@
         <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
     </div>
 
-    <header id="mainHeader" class="flex justify-between items-center px-12">
+    <header id="mainHeader" class="flex justify-between items-center">
         <h1 class="text-2xl font-black italic uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
         <div class="flex items-center gap-6" id="searchContainer">
-            <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
-            <div id="suggestions"></div>
-            <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
-            <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden">Sign Out</button>
+            <div class="relative">
+                <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
+                <div id="suggestions"></div>
+            </div>
+            <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold bg-white/5 px-6 py-3 rounded-xl border border-white/10">Login</button>
+            <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden border border-red-500/20">Sign Out</button>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 glass-card rounded-[3rem] p-10">
-                <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase">---</p>
-                <h2 id="priceDisplay" class="text-6xl font-extrabold italic">0.00</h2>
+                <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase mb-1">---</p>
+                <h2 id="priceDisplay" class="text-6xl font-extrabold italic tracking-tighter">0.00</h2>
                 <span id="changeDisplay" class="text-xl font-bold">0.00%</span>
 
-                <div class="flex gap-8 my-8 text-[11px] font-bold text-gray-500 border-b border-white/5 pb-2">
+                <div class="flex gap-8 my-8 border-b border-white/5 pb-2 text-[11px] font-bold text-gray-500">
                     <button onclick="updateData('1d', this)" class="time-btn active-btn">1D</button>
                     <button onclick="updateData('1mo', this)" class="time-btn">1M</button>
                     <button onclick="updateData('1y', this)" class="time-btn">1Y</button>
@@ -81,14 +82,14 @@
 
             <div class="lg:col-span-4 flex flex-col gap-6">
                 <div class="glass-card rounded-[2.5rem] p-8 border-l-4 border-blue-500">
-                    <p class="text-[10px] font-bold text-blue-400">12M AI Target</p>
+                    <p class="text-[10px] font-bold text-blue-400 uppercase">12M AI Target</p>
                     <h3 id="targetDisplay" class="text-4xl font-black">---</h3>
                 </div>
                 <div class="glass-card rounded-[2.5rem] p-8">
                     <p class="text-[10px] font-bold text-orange-400 mb-6 uppercase">⚡ Hype vs Health</p>
                     <div class="flex gap-10 h-28 items-end">
-                        <div class="flex-1 flex flex-col items-center"><div id="healthBar" class="stat-bar fill-health" style="height:0%"></div><p class="text-[8px] mt-2">HEALTH</p></div>
-                        <div class="flex-1 flex flex-col items-center"><div id="hypeBar" class="stat-bar fill-hype" style="height:0%"></div><p class="text-[8px] mt-2">HYPE</p></div>
+                        <div class="flex-1 flex flex-col items-center"><div id="healthBar" class="stat-bar fill-health" style="height:0%"></div><p class="text-[8px] font-bold mt-2">HEALTH</p></div>
+                        <div class="flex-1 flex flex-col items-center"><div id="hypeBar" class="stat-bar fill-hype" style="height:0%"></div><p class="text-[8px] font-bold mt-2">HYPE</p></div>
                     </div>
                 </div>
                 <div class="glass-card rounded-[2.5rem] p-8">
@@ -121,16 +122,11 @@
                 const data = await res.json();
                 if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
                 if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
-                else { error.innerText = "Success! Now Login."; error.classList.add("success-text"); toggleAuthMode(); }
-            } catch { error.innerText = "Network Error"; }
+                else { error.innerText = "Success! Now Login."; error.classList.add("text-emerald-400"); toggleAuthMode(); }
+            } catch { error.innerText = "Error Connecting"; }
         }
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
-        function updateAuthUI() {
-            const token = localStorage.getItem("token");
-            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
-            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
-        }
 
         async function refreshData() {
             document.getElementById('loader').classList.remove('hidden');
@@ -139,7 +135,7 @@
                 const data = await res.json();
                 
                 document.getElementById('symbolDisplay').innerText = data.symbol;
-                document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 font-normal ml-2">${data.currency_text}</span>`;
+                document.getElementById('priceDisplay').innerHTML = `${data.price} <span class="text-sm text-gray-500 ml-2 font-normal">${data.currency_text}</span>`;
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').style.color = parseFloat(data.change) >= 0 ? '#00ffbb' : '#ff3366';
 
@@ -201,7 +197,18 @@
         function selectTicker(s) { ticker = s; refreshData(); document.getElementById('suggestions').style.display='none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
-        window.onload = () => { updateAuthUI(); refreshData(); };
+        window.onload = () => {
+            const token = localStorage.getItem("token");
+            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
+            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
+            refreshData();
+        };
+
+        window.addEventListener("scroll", () => {
+            let curr = window.pageYOffset;
+            document.getElementById("mainHeader").classList.toggle("header-hidden", curr > lastScroll && curr > 60);
+            lastScroll = curr;
+        });
     </script>
 </body>
 </html>
