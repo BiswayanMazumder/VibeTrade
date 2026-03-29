@@ -144,7 +144,11 @@ async def login(email: str, password: str):
 # =========================
 @app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request, 
+        name="index.html", 
+        context={"request": request}
+    )
 
 @app.get("/api/context")
 async def context_api():
