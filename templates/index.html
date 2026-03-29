@@ -16,9 +16,54 @@
         .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
         #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
+        /* GEN-Z LOADER */
+.animate-glow {
+    background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb);
+    background-size: 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glowMove 2s linear infinite;
+}
+
+@keyframes glowMove {
+    0% { background-position: 0% }
+    100% { background-position: 200% }
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background: #00ffbb;
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    from { transform: translateY(0px); opacity: 0.5; }
+    to { transform: translateY(-10px); opacity: 1; }
+}
     </style>
 </head>
 <body>
+    <!-- GEN-Z LOADING SCREEN -->
+<div id="genzLoader" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black">
+    
+    <div class="text-center">
+        <h1 class="text-4xl font-black tracking-widest animate-glow">
+            VANT<span class="text-emerald-400">EDGE</span>
+        </h1>
+
+        <div class="mt-6 flex justify-center gap-2">
+            <div class="dot"></div>
+            <div class="dot delay-1"></div>
+            <div class="dot delay-2"></div>
+        </div>
+    </div>
+
+</div>
         <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
         <div class="glass-card p-8 rounded-2xl w-[350px]">
             <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
@@ -198,7 +243,20 @@
         function selectTicker(s) { ticker = s; refreshData(); document.getElementById('suggestions').style.display='none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
-         window.onload = () => { updateAuthUI(); refreshData(); };
+        window.onload = () => {
+    try { updateAuthUI(); } catch(e){}
+    try { refreshData(); } catch(e){}
+
+    // 🔥 Hide GEN-Z loader
+    setTimeout(() => {
+        const loader = document.getElementById("genzLoader");
+        if(loader){
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.5s ease";
+            setTimeout(() => loader.remove(), 500);
+        }
+    }, 800); // delay for vibe
+};
         window.addEventListener("scroll", () => {
             let curr = window.pageYOffset;
             document.getElementById("mainHeader").classList.toggle("header-hidden", curr > lastScroll && curr > 60);
