@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request, Query, HTTPException, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from google import genai
 
 load_dotenv()
 app = FastAPI()
@@ -37,6 +38,7 @@ GUARDIAN_API_KEY = os.getenv("GUARDIAN_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+client = genai.Client(api_key=os.getenv("GENAI_API_KEY"))
 
 CURRENCY_SYMBOLS = {'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥'}
 
@@ -136,65 +138,41 @@ def send_welcome_email(to_email: str, username: str):
         print("EMAIL STATUS:", res.status_code, res.text)
     except Exception as e:
         print("EMAIL ERROR:", e)
-
 # =========================
-# 🤖 ENHANCED V.E.R.A. (yfinance Analytics)
+# 🤖 GEMINI-ONLY V.E.R.A. CORE
 # =========================
 @app.post("/api/chat")
 async def chat_vera(request: Request):
     data = await request.json()
-    user_msg = data.get("message", "").strip().upper()
-    
-    import re
-    # Look for 1-5 character uppercase words (Tickers)
-    tickers = re.findall(r'\b[A-Z]{1,5}\b', user_msg)
-    
-    if tickers:
-        ticker_to_scan = tickers[0]
-        try: 
-            stock = yf.Ticker(ticker_to_scan)
-            # Fetching more detailed fast_info
-            info = stock.fast_info
-            
-            price = info['last_price']
-            change_pct = ((price - info['previous_close']) / info['previous_close']) * 100
-            day_high = info['day_high']
-            day_low = info['day_low']
-            vol = info['last_volume']
-            currency = info['currency']
+    user_msg = data.get("message", "").strip()
 
-            # Formulating a detailed "Jarvis" style report
-            trend = "Bullish 📈" if change_pct > 0 else "Bearish 📉"
-            
-            detailed_response = (
-                f"[V.E.R.A.]: Uplink Successful. Scanning {ticker_to_scan} vectors... \n\n"
-                f"• Current Price: {price:.2f} {currency} ({change_pct:+.2f}%)\n"
-                f"• Session Trend: {trend}\n"
-                f"• Range: L {day_low:.2f} — H {day_high:.2f}\n"
-                f"• Volatility: {'High' if abs(change_pct) > 2 else 'Stable'}\n\n"
-                f"Terminal synchronized. HUD layers updated with {ticker_to_scan} fundamental data, sir."
-            )
-            
-            return {"response": detailed_response}
-            
-        except Exception:
-            # Fall through if ticker is invalid or API fails
-            pass
+    try:
+        # We initialize the prompt with strict constraints
+        # No yfinance, just Gemini's knowledge with a specialized persona
+        system_instructions = (
+            "You are V.E.R.A., the AI core of the Vantedge Trading Terminal. "
+            "Your knowledge is strictly limited to: \n"
+            "1. Stock market analysis & Financial metrics.\n"
+            "2. Crypto and Global Market trends.\n"
+            "3. Explaining Vantedge Terminal features (Charts, Hype/Health bars, News).\n\n"
+            "RULES:\n"
+            "- If the user asks about anything unrelated to finance/trading (e.g., movies, recipes, general talk), "
+            "politely decline and state your focus is solely on market intelligence.\n"
+            "- Keep your tone professional, concise, and 'Jarvis-like'.\n"
+            "- Use 'sir' or 'user' where appropriate to maintain the terminal persona."
+        )
 
-    # 2. Detailed Personality Responses
-    personality_responses = {
-        "HELLO": "Systems online, sir. V.E.R.A. at your service. Intelligence core initialized. Which sector are we analyzing today?",
-        "STATUS": "Diagnostic complete. Data streams from Yahoo Finance, The Guardian, and Neon DB are synchronized. Latency is optimal at 24ms.",
-        "HELP": "I am your Real-time Analyst core. Provide any valid ticker (e.g., TSLA, BTC-USD, NVDA) and I will execute a deep-packet scan of its session metrics.",
-    }
+        # Generate content using the new SDK patterns
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=f"{system_instructions}\n\nUser: {user_msg}"
+        )
+        
+        return {"response": f"[V.E.R.A.]: {response.text}"}
 
-    # Enhanced generic fallback
-    reply = personality_responses.get(user_msg, 
-        "Logic circuits processing... I am currently monitoring global market vectors and detecting micro-volatility. "
-        "Please provide a specific ticker symbol to focus the HUD's technical overlays."
-    )
-    
-    return {"response": f"[V.E.R.A.]: {reply}"}
+    except Exception as e:
+        print(f"GEMINI ERROR: {e}")
+        return {"response": "[V.E.R.A.]: Critical failure in intelligence core. Please re-verify API uplink."}
 # =========================
 # 🔐 AUTH HELPERS
 # =========================
