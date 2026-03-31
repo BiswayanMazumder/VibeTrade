@@ -394,12 +394,13 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 if abs(n) < 1000: return f"{n:3.1f}{u}"
                 n /= 1000
             return f"{n:.1f}T"
-
         return {
             "symbol": ticker.upper(),
             "price": f"{current_p:,.2f}",
             "currency_text": curr,
             "change": f"{change:+.2f}%",
+            "market_status": status,
+            "is_live": is_live,
             "news": fetch_guardian_news(ticker),
             "target": f"{sym}{info.get('targetMeanPrice', current_p*1.15):,.2f}",
             "health": 70,
@@ -410,8 +411,11 @@ async def stream_data(ticker: str, period: str = Query("1d")):
                 "pe_ratio": f"{info.get('trailingPE', 0):.2f}" if info.get('trailingPE') else "N/A",
                 "dividend": f"{info.get('dividendYield', 0)*100:.2f}%" if info.get('dividendYield') else "0.00%",
                 "high_52w": f"{sym}{info.get('fiftyTwoWeekHigh', 0):,.2f}",
-                "low_52w": f"{sym}{info.get('fiftyTwoWeekLow', 0):,.2f}"
+                "low_52w": f"{sym}{info.get('fiftyTwoWeekLow', 0):,.2f}",
+               
+                
             },
+            
             "chart_json": {
                 "x": hist.index.strftime('%Y-%m-%d %H:%M:%S').tolist(),
                 "y": hist['Close'].tolist(),

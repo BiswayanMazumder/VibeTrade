@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,67 +9,217 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; min-height: 150vh; padding-top: 130px; overflow-x: hidden; }
-        header { position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(25px); padding: 1.5rem 3rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.4s; }
-        .header-hidden { transform: translateY(-100%); }
-        .glass-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; }
-        .stat-bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 1.5s ease-out; min-height: 4px; }
-        .fill-health { background: linear-gradient(to top, #1e3a8a, #3b82f6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-        .fill-hype { background: linear-gradient(to top, #7c2d12, #f97316); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
-        #suggestions { position: fixed; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; display: none; z-index: 100000; box-shadow: 0 40px 80px rgba(0,0,0,1); }
-        
-        .animate-glow { background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: glowMove 2s linear infinite; }
-        @keyframes glowMove { 0% { background-position: 0% } 100% { background-position: 200% } }
-        .dot { width: 10px; height: 10px; background: #00ffbb; border-radius: 50%; animation: bounce 0.6s infinite alternate; }
-        .delay-1 { animation-delay: 0.2s; } .delay-2 { animation-delay: 0.4s; }
-        @keyframes bounce { from { transform: translateY(0px); opacity: 0.5; } to { transform: translateY(-10px); opacity: 1; } }
-        
-        @keyframes pulse-once { 0% { opacity: 0; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
-        .animate-pulse-once { animation: pulse-once 0.3s ease-out forwards; }
-        #veraLogs::-webkit-scrollbar { width: 2px; }
-        #veraLogs::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #050505;
+            color: white;
+            min-height: 150vh;
+            padding-top: 130px;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(25px);
+            padding: 1.5rem 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.4s;
+        }
+
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: 0.3s;
+        }
+
+        .stat-bar {
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            transition: height 1.5s ease-out;
+            min-height: 4px;
+        }
+
+        .fill-health {
+            background: linear-gradient(to top, #1e3a8a, #3b82f6);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .fill-hype {
+            background: linear-gradient(to top, #7c2d12, #f97316);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+        }
+
+        #suggestions {
+            position: fixed;
+            background: #0f0f0f;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
+            display: none;
+            z-index: 100000;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 1);
+        }
+
+        .animate-glow {
+            background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glowMove 2s linear infinite;
+        }
+
+        @keyframes glowMove {
+            0% {
+                background-position: 0%
+            }
+
+            100% {
+                background-position: 200%
+            }
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #00ffbb;
+            border-radius: 50%;
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .delay-1 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0px);
+                opacity: 0.5;
+            }
+
+            to {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-once {
+            0% {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-pulse-once {
+            animation: pulse-once 0.3s ease-out forwards;
+        }
+
+        #veraLogs::-webkit-scrollbar {
+            width: 2px;
+        }
+
+        #veraLogs::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .market-live {
+            animation: status-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes status-glow {
+
+            0%,
+            100% {
+                opacity: 1;
+                filter: brightness(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                filter: brightness(1.2);
+            }
+        }
     </style>
 </head>
+
 <body>
     <div id="genzLoader" class="fixed inset-0 z-[999999] flex items-center justify-center bg-black">
         <div class="text-center">
-            <h1 class="text-4xl font-black tracking-widest animate-glow">VANT<span class="text-emerald-400">EDGE</span></h1>
+            <h1 class="text-4xl font-black tracking-widest animate-glow">VANT<span class="text-emerald-400">EDGE</span>
+            </h1>
             <div class="mt-6 flex justify-center gap-2">
-                <div class="dot"></div><div class="dot delay-1"></div><div class="dot delay-2"></div>
+                <div class="dot"></div>
+                <div class="dot delay-1"></div>
+                <div class="dot delay-2"></div>
             </div>
         </div>
     </div>
 
-    <div id="loader" class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
+    <div id="loader"
+        class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-2xl hidden">
         <div class="w-16 h-16 border-4 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
     </div>
 
-    <div id="authModal" class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
+    <div id="authModal"
+        class="fixed inset-0 z-[200000] bg-black/80 backdrop-blur-xl flex items-center justify-center hidden">
         <div class="glass-card p-8 rounded-2xl w-[350px]">
             <h2 id="authTitle" class="text-lg font-bold mb-4 text-center uppercase">Login</h2>
-            <input id="authEmail" placeholder="Email" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
-            <input id="authPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500 text-white">
-            <input id="authUsername" placeholder="Username" class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
+            <input id="authEmail" placeholder="Email"
+                class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500">
+            <input id="authPassword" type="password" placeholder="Password"
+                class="w-full mb-3 p-3 bg-white/5 rounded-xl outline-none focus:ring-1 ring-emerald-500 text-white">
+            <input id="authUsername" placeholder="Username"
+                class="w-full mb-3 p-3 bg-white/5 rounded-xl hidden outline-none focus:ring-1 ring-emerald-500">
             <p id="authError" class="text-red-400 text-xs mb-3 hidden text-center"></p>
-            <button onclick="submitAuth()" class="w-full py-3 bg-emerald-500 text-black font-bold rounded-xl hover:scale-[1.02] transition-all">Continue</button>
-            <p onclick="toggleAuthMode()" class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase hover:text-white">Switch Mode</p>
+            <button onclick="submitAuth()"
+                class="w-full py-3 bg-emerald-500 text-black font-bold rounded-xl hover:scale-[1.02] transition-all">Continue</button>
+            <p onclick="toggleAuthMode()"
+                class="text-[10px] text-gray-400 mt-4 text-center cursor-pointer uppercase hover:text-white">Switch Mode
+            </p>
         </div>
     </div>
 
     <header id="mainHeader" class="flex justify-between items-center">
         <h1 class="text-2xl font-black italic uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
         <div class="flex items-center gap-6" id="searchContainer">
-            <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')" placeholder="Search Asset..." class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
+            <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')"
+                placeholder="Search Asset..."
+                class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
             <div id="suggestions"></div>
-            <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
-            <button onclick="logout()" id="logoutBtn" class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden">Sign Out</button>
+            <button onclick="openAuth()" id="loginBtn"
+                class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
+            <button onclick="logout()" id="logoutBtn"
+                class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden">Sign Out</button>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 glass-card rounded-[3rem] p-10">
-                <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase">---</p>
+                <div class="flex items-center gap-3 mb-2">
+                    <p id="symbolDisplay" class="text-gray-500 font-bold text-[10px] uppercase tracking-widest">---</p>
+                    <div id="marketBadge"
+                        class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter hidden">
+                        OFFLINE
+                    </div>
+                </div>
                 <h2 id="priceDisplay" class="text-6xl font-extrabold italic tracking-tighter">0.00</h2>
                 <span id="changeDisplay" class="text-xl font-bold">0.00%</span>
 
@@ -82,16 +233,22 @@
 
                 <div class="grid grid-cols-3 gap-8 mt-10 pt-10 border-t border-white/5">
                     <div class="space-y-4 text-[11px] uppercase">
-                        <div class="flex justify-between"><span class="text-gray-500">Open</span><span id="f_open">---</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Mkt Cap</span><span id="f_mkt">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Open</span><span
+                                id="f_open">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Mkt Cap</span><span
+                                id="f_mkt">---</span></div>
                     </div>
                     <div class="space-y-4 text-[11px] uppercase">
-                        <div class="flex justify-between"><span class="text-gray-500">P/E Ratio</span><span id="f_pe">---</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">52W High</span><span id="f_h52">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">P/E Ratio</span><span
+                                id="f_pe">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">52W High</span><span
+                                id="f_h52">---</span></div>
                     </div>
                     <div class="space-y-4 text-[11px] uppercase">
-                        <div class="flex justify-between"><span class="text-gray-500">Dividend</span><span id="f_div">---</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">52W Low</span><span id="f_l52">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Dividend</span><span
+                                id="f_div">---</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">52W Low</span><span
+                                id="f_l52">---</span></div>
                     </div>
                 </div>
             </div>
@@ -104,8 +261,14 @@
                 <div class="glass-card rounded-[2.5rem] p-8">
                     <p class="text-[10px] font-bold text-orange-400 mb-6 uppercase">⚡ Hype vs Health</p>
                     <div class="flex gap-10 h-28 items-end">
-                        <div class="flex-1 flex flex-col items-center"><div id="healthBar" class="stat-bar fill-health" style="height:0%"></div><p class="text-[8px] font-bold mt-2">HEALTH</p></div>
-                        <div class="flex-1 flex flex-col items-center"><div id="hypeBar" class="stat-bar fill-hype" style="height:0%"></div><p class="text-[8px] font-bold mt-2">HYPE</p></div>
+                        <div class="flex-1 flex flex-col items-center">
+                            <div id="healthBar" class="stat-bar fill-health" style="height:0%"></div>
+                            <p class="text-[8px] font-bold mt-2">HEALTH</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center">
+                            <div id="hypeBar" class="stat-bar fill-hype" style="height:0%"></div>
+                            <p class="text-[8px] font-bold mt-2">HYPE</p>
+                        </div>
                     </div>
                 </div>
                 <div class="glass-card rounded-[2.5rem] p-8">
@@ -117,7 +280,8 @@
     </div>
 
     <div id="veraContainer" class="fixed bottom-6 right-6 z-[999999] flex flex-col items-end">
-        <div id="veraWindow" class="glass-card mb-4 w-80 h-[450px] rounded-[2.5rem] flex flex-col overflow-hidden hidden shadow-2xl border-emerald-500/20">
+        <div id="veraWindow"
+            class="glass-card mb-4 w-80 h-[450px] rounded-[2.5rem] flex flex-col overflow-hidden hidden shadow-2xl border-emerald-500/20">
             <div class="p-5 bg-emerald-500/10 border-b border-white/5 flex items-center justify-between">
                 <div class="flex flex-col">
                     <div class="flex items-center gap-2">
@@ -129,13 +293,17 @@
                 <button onclick="toggleVera()" class="text-gray-500 hover:text-white transition-colors">✕</button>
             </div>
             <div id="veraLogs" class="flex-1 p-5 overflow-y-auto text-[11px] font-mono space-y-4 scroll-smooth">
-                <div class="text-emerald-400/50 italic border-l border-emerald-500/20 pl-3">Uplink established. Awaiting ticker...</div>
+                <div class="text-emerald-400/50 italic border-l border-emerald-500/20 pl-3">Uplink established. Awaiting
+                    ticker...</div>
             </div>
             <div class="p-5 border-t border-white/5 bg-black/40">
-                <input id="veraInput" onkeydown="if(event.key==='Enter') sendToVera()" placeholder="ENTER COMMAND (E.G. TSLA)..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-emerald-500 font-bold tracking-widest text-white transition-all uppercase">
+                <input id="veraInput" onkeydown="if(event.key==='Enter') sendToVera()"
+                    placeholder="ENTER COMMAND (E.G. TSLA)..."
+                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] outline-none focus:border-emerald-500 font-bold tracking-widest text-white transition-all uppercase">
             </div>
         </div>
-        <button onclick="toggleVera()" class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-110 active:scale-95 transition-all border-4 border-[#050505]">
+        <button onclick="toggleVera()"
+            class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-110 active:scale-95 transition-all border-4 border-[#050505]">
             <span class="text-black font-black text-[10px] tracking-tighter">V.E.R.A</span>
         </button>
     </div>
@@ -186,7 +354,7 @@
                 document.getElementById('changeDisplay').innerText = data.change;
                 document.getElementById('changeDisplay').style.color = parseFloat(data.change) >= 0 ? '#00ffbb' : '#ff3366';
                 document.getElementById('targetDisplay').innerText = data.target;
-                
+
                 setTimeout(() => {
                     document.getElementById('healthBar').style.height = `70%`;
                     document.getElementById('hypeBar').style.height = `60%`;
@@ -203,7 +371,7 @@
                 }, { responsive: true, displayModeBar: false });
 
                 document.getElementById('newsArea').innerHTML = data.news.map(n => `<a href="${n.link}" target="_blank" class="block hover:text-emerald-400 underline decoration-white/5">${n.title}</a>`).join('');
-                
+
                 const f = data.fundamentals;
                 document.getElementById('f_open').innerText = f.open;
                 document.getElementById('f_mkt').innerText = f.mkt_cap;
@@ -211,7 +379,16 @@
                 document.getElementById('f_h52').innerText = f.high_52w;
                 document.getElementById('f_div').innerText = f.dividend;
                 document.getElementById('f_l52').innerText = f.low_52w;
-            } catch (e) { console.error(e); } 
+                const badge = document.getElementById('marketBadge');
+                badge.innerText = data.market_status;
+                badge.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'bg-red-500/10', 'text-red-400');
+
+                if (data.is_live) {
+                    badge.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
+                } else {
+                    badge.classList.add('bg-red-500/10', 'text-red-400', 'border', 'border-red-500/20');
+                }
+            } catch (e) { console.error(e); }
             finally { if (!isSilent) setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500); }
         }
 
@@ -231,14 +408,14 @@
             } catch { box.style.display = 'none'; }
         }
 
-        function selectTicker(s, isSilent = false) { ticker = s; refreshData(isSilent); document.getElementById('suggestions').style.display='none'; }
+        function selectTicker(s, isSilent = false) { ticker = s; refreshData(isSilent); document.getElementById('suggestions').style.display = 'none'; }
         function updateData(p, btn) { period = p; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active-btn')); btn.classList.add('active-btn'); refreshData(); }
 
         // --- V.E.R.A. FUNCTIONS ---
         function toggleVera() {
             const win = document.getElementById('veraWindow');
             win.classList.toggle('hidden');
-            if(!win.classList.contains('hidden')) document.getElementById('veraInput').focus();
+            if (!win.classList.contains('hidden')) document.getElementById('veraInput').focus();
         }
 
         function speakVera(text) {
@@ -255,11 +432,11 @@
             const input = document.getElementById('veraInput');
             const logs = document.getElementById('veraLogs');
             const val = input.value.trim();
-            if(!val) return;
+            if (!val) return;
             logs.innerHTML += `<div class="text-white/30 text-right text-[9px] uppercase mt-4">>> ${val}</div>`;
             input.value = '';
             try {
-                const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message: val}) });
+                const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: val }) });
                 const data = await res.json();
                 const msgDiv = document.createElement('div');
                 msgDiv.className = "text-emerald-400 bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10 mb-2 animate-pulse-once mt-2";
@@ -271,18 +448,19 @@
                 // 🔥 SILENT UPDATE TRIGGER (Added 'true' parameter)
                 if (data.response.includes("Scanning") || data.response.includes("Analysis complete")) {
                     const match = val.match(/\b[A-Z]{1,5}\b/i);
-                    if(match) selectTicker(match[0].toUpperCase(), true); 
+                    if (match) selectTicker(match[0].toUpperCase(), true);
                 }
-            } catch(e) { logs.innerHTML += `<div class="text-red-500/50 text-[9px] mt-2">[ERROR: UPLINK FAILED]</div>`; }
+            } catch (e) { logs.innerHTML += `<div class="text-red-500/50 text-[9px] mt-2">[ERROR: UPLINK FAILED]</div>`; }
         }
 
         window.onload = () => {
             updateAuthUI(); refreshData();
             setTimeout(() => {
                 const ldr = document.getElementById("genzLoader");
-                if(ldr) { ldr.style.opacity = "0"; setTimeout(() => ldr.remove(), 500); }
+                if (ldr) { ldr.style.opacity = "0"; setTimeout(() => ldr.remove(), 500); }
             }, 800);
         };
     </script>
 </body>
+
 </html>
