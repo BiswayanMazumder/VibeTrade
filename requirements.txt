@@ -12,4 +12,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 uvicorn
 python-dotenv
-google
+google-genai
