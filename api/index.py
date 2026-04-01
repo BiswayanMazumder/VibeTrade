@@ -390,7 +390,7 @@ async def get_profile(request: Request):
 
 @app.get("/profile")
 async def profile_page(request: Request):
-    return templates.TemplateResponse("profile.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="profile.html")
 @app.get("/api/stream/{ticker}")
 async def stream_data(ticker: str, period: str = Query("1d")):
     try:

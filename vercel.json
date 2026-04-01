@@ -1,12 +1,14 @@
 {
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
-      "src": "/profile",
-      "dest": "/templates/profile.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
+      "source": "/(.*)",
+      "destination": "api/index.py"
     }
   ]
 }
