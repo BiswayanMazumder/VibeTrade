@@ -509,22 +509,47 @@
             document.getElementById("authUsername").classList.toggle("hidden", isLogin);
         }
 
-        async function submitAuth() {
-            const email = document.getElementById("authEmail").value;
-            const password = document.getElementById("authPassword").value;
-            const username = document.getElementById("authUsername").value;
-            const error = document.getElementById("authError");
-            let url = isLogin ? `/auth/login?email=${email}&password=${password}` : `/auth/register?username=${username}&email=${email}&password=${password}`;
-            document.getElementById('loader').classList.remove("hidden");
-            try {
-                const res = await fetch(url, { method: "POST" });
-                const data = await res.json();
-                if (!res.ok) { error.innerText = data.detail; error.classList.remove("hidden"); return; }
-                if (isLogin) { localStorage.setItem("token", data.access_token); location.reload(); }
-                else { error.innerText = "Success! Now Login."; toggleAuthMode(); }
-            } catch (e) { error.innerText = "Network Error"; }
-            finally { setTimeout(() => { document.getElementById('loader').classList.add("hidden"); }, 400); }
+async function submitAuth() {
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const username = document.getElementById("authUsername").value;
+    const error = document.getElementById("authError");
+    
+    let url = isLogin 
+        ? `/auth/login?email=${email}&password=${password}` 
+        : `/auth/register?username=${username}&email=${email}&password=${password}`;
+        
+    document.getElementById('loader').classList.remove("hidden");
+    error.classList.add("hidden"); // Clear previous errors
+
+    try {
+        const res = await fetch(url, { method: "POST" });
+        const data = await res.json();
+
+        if (!res.ok) {
+            // This captures the 403 deactivation message from the backend
+            error.innerText = data.detail || "Authentication Failed";
+            error.classList.remove("hidden");
+            return; 
         }
+
+        if (isLogin) {
+            localStorage.setItem("token", data.access_token);
+            location.reload();
+        } else {
+            error.innerText = "Success! Now Login.";
+            error.classList.remove("hidden");
+            toggleAuthMode();
+        }
+    } catch (e) {
+        error.innerText = "Uplink Error: Connection Terminated";
+        error.classList.remove("hidden");
+    } finally {
+        setTimeout(() => { 
+            document.getElementById('loader').classList.add("hidden"); 
+        }, 400);
+    }
+}
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
         function toggleSidebar() {

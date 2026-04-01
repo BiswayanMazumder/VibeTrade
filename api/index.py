@@ -331,7 +331,10 @@ async def update_username(request: Request, background_tasks: BackgroundTasks):
 async def register(username: str, email: str, password: str, background_tasks: BackgroundTasks):
     conn = get_db(); cur = conn.cursor()
     try:
-        cur.execute("SELECT * FROM users WHERE email=%s", (email,))
+        cur.execute(
+    "INSERT INTO users (username, email, password, status) VALUES (%s, %s, %s, 'ACTIVE')",
+    (username, email, hashed)
+)
         if cur.fetchone():
             raise HTTPException(status_code=400, detail="User exists")
 
@@ -350,15 +353,25 @@ async def register(username: str, email: str, password: str, background_tasks: B
 
 @app.post("/auth/login")
 async def login(email: str, password: str):
-    conn = get_db(); cur = conn.cursor()
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
-        cur.execute("SELECT id, password FROM users WHERE email=%s", (email,))
+        # We now fetch 'status' along with id and password
+        cur.execute("SELECT id, password, status FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
 
-        if not user or not verify_password(password, user[1]):
+        if not user or not verify_password(password, user['password']):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        return {"access_token": create_token({"user_id": user[0]})}
+        # ✅ STATUS CHECK
+        # If status is not ACTIVE (case-insensitive check)
+        if str(user['status']).upper() != "ACTIVE":
+            raise HTTPException(
+                status_code=403, 
+                detail="Your account has been deactivated. Please contact customer support for further assistance."
+            )
+
+        return {"access_token": create_token({"user_id": user['id']})}
     finally:
         cur.close(); conn.close()
 
