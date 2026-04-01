@@ -2,7 +2,7 @@
   "routes": [
     {
       "src": "/profile",
-      "dest": "/profile.html"
+      "dest": "/templates/profile.html"
     },
     {
       "src": "/api/(.*)",
