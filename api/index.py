@@ -346,7 +346,51 @@ async def search(query: str):
         return [{"symbol": q['symbol'], "name": q.get('shortname', 'Asset')} for q in s.quotes]
     except:
         return []
+    
+# =========================
+# 👤 PROFILE ROUTE
+# =========================
+@app.get("/api/profile")
+async def get_profile(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("user_id")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Session expired")
 
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT id, username, email, created_at FROM users WHERE id=%s", (user_id,))
+        user = cur.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "username": user['username'],
+            "email": user['email'],
+            # "status": user['status'],
+            "member_since": user['created_at'].strftime("%B %Y") if user['created_at'] else "Alpha Access",
+            "uid": user['id']  # Send as raw ID number
+        }
+    except Exception as e:
+        print(f"PROFILE ERROR: {e}")
+        raise HTTPException(status_code=500, detail="Internal Error")
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+@app.get("/profile")
+async def profile_page(request: Request):
+    return templates.TemplateResponse("profile.html", {"request": request})
 @app.get("/api/stream/{ticker}")
 async def stream_data(ticker: str, period: str = Query("1d")):
     try:
