@@ -264,7 +264,66 @@ def fetch_guardian_news(ticker):
     finally:
         cur.close()
         conn.close()
+# =========================
+# 📧 SECURITY EMAIL
+# =========================
+def send_security_alert(to_email: str, old_name: str, new_name: str, ip_address: str):
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    data = {
+        "sender": {"name": "Vantedge Security", "email": SENDER_EMAIL},
+        "to": [{"email": to_email}],
+        "subject": "Security Alert: Username Changed 🔐",
+        "htmlContent": f"""
+        <div style="background:#0a0a0a; color:white; padding:40px; font-family:sans-serif; border-radius:20px;">
+            <h2 style="color:#ef4444;">Security Notification</h2>
+            <p>Hello, your Vantedge username was recently updated.</p>
+            <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:12px;">
+                <p><b>Old Username:</b> {old_name}</p>
+                <p><b>New Username:</b> {new_name}</p>
+                <p><b>IP Address:</b> {ip_address}</p>
+                <p><b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
+            </div>
+            <p style="color:#666; font-size:12px; margin-top:20px;">
+                If you did not perform this action, please contact support immediately.
+            </p>
+        </div>
+        """
+    }
+    requests.post(url, json=data, headers=headers)
+@app.put("/api/profile/update-username")
+async def update_username(request: Request, background_tasks: BackgroundTasks):
+    # 1. Verify Token
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split(" ")[1]
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id = payload.get("user_id")
 
+    # 2. Get Data & IP
+    data = await request.json()
+    new_username = data.get("username", "").strip()
+    client_ip = request.client.host
+
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        # Fetch current info for security log
+        cur.execute("SELECT username, email FROM users WHERE id=%s", (user_id,))
+        user = cur.fetchone()
+        
+        # 3. Update DB
+        cur.execute("UPDATE users SET username=%s WHERE id=%s", (new_username, user_id))
+        conn.commit()
+
+        # 4. Trigger Security Email (using the helper function we discussed)
+        background_tasks.add_task(send_security_alert, user['email'], user['username'], new_username, client_ip)
+
+        return {"message": "Success"}
+    finally:
+        cur.close(); conn.close()
 # =========================
 # 🔐 AUTH ROUTES
 # =========================

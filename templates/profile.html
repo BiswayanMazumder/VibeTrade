@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vantedge | Core Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -20,7 +19,6 @@
             overflow: hidden;
         }
 
-        /* Matches the dashboard glass cards */
         .glass-card {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(35px);
@@ -32,14 +30,6 @@
             border-left: 4px solid #10b981;
         }
 
-        .animate-glow {
-            background: linear-gradient(90deg, #00ffbb, #3b82f6, #00ffbb);
-            background-size: 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: glowMove 3s linear infinite;
-        }
-        /* High-Tech Loader Styles */
         #terminal-loader {
             position: fixed;
             inset: 0;
@@ -97,15 +87,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes glowMove {
-            0% {
-                background-position: 0%
-            }
-
-            100% {
-                background-position: 200%
-            }
-        }
 
         .profile-label {
             font-size: 10px;
@@ -119,6 +100,12 @@
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.2);
             color: #10b981;
+        }
+
+        /* HUD Slide Animation */
+        .hud-active {
+            transform: translate(-50%, -20px) !important;
+            opacity: 1 !important;
         }
     </style>
 </head>
@@ -135,25 +122,38 @@
             <div id="progress-bar" class="h-full bg-emerald-500 w-0 transition-all duration-500 ease-out"></div>
         </div>
     </div>
+
     <div class="max-w-4xl w-full px-6 flex flex-col items-center">
         <div class="mb-12 text-center">
-            <h1 class="text-3xl font-black italic tracking-tighter uppercase mb-2">VANT<span
-                    class="text-emerald-400">EDGE.</span></h1>
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase mb-2">VANT<span class="text-emerald-400">EDGE.</span></h1>
             <div class="h-[1px] w-12 bg-emerald-500/50 mx-auto"></div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 w-full">
-
             <div class="md:col-span-5 glass-card rounded-[3rem] p-10 flex flex-col items-center text-center">
                 <div class="w-28 h-28 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 p-[2px] mb-6">
-                    <div class="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-3xl font-black italic tracking-tighter"
-                        id="userInitials">
+                    <div class="w-full h-full rounded-full bg-[#050505] flex items-center justify-center text-3xl font-black italic tracking-tighter" id="userInitials">
                         --
                     </div>
                 </div>
-                <h2 id="userName" class="text-3xl font-black italic tracking-tighter mb-1">---</h2>
-                <div id="userTier"
-                    class="status-badge px-4 py-1 rounded-full text-[9px] font-black tracking-widest uppercase mb-8">
+
+                <div class="flex flex-col items-center group mb-1">
+                    <div id="nameContainer" class="flex items-center gap-3">
+                        <h2 id="userName" class="text-3xl font-black italic tracking-tighter">---</h2>
+                        <button onclick="toggleEditMode()" class="opacity-30 hover:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                    </div>
+                    <div id="editMode" class="hidden flex flex-col items-center gap-2">
+                        <input type="text" id="nameInput" class="bg-transparent border-b-2 border-emerald-500/50 text-emerald-400 text-2xl font-black italic tracking-tighter text-center outline-none focus:border-emerald-400 transition-all w-64 uppercase" placeholder="NEW ALIAS...">
+                        <div class="flex gap-4">
+                            <button onclick="submitNewName()" class="text-[9px] font-black tracking-widest text-emerald-400 hover:text-white uppercase">Confirm</button>
+                            <button onclick="toggleEditMode()" class="text-[9px] font-black tracking-widest text-red-500/70 hover:text-red-400 uppercase">Abort</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="userTier" class="status-badge px-4 py-1 rounded-full text-[9px] font-black tracking-widest uppercase mb-8">
                     VERIFIED TERMINAL PRO
                 </div>
 
@@ -191,22 +191,25 @@
                 </div>
 
                 <div class="flex gap-4 pt-4">
-                    <button onclick="window.location.href='/'"
-                        class="flex-1 glass-card hover:bg-white/5 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest transition-all">
+                    <button onclick="window.location.href='/'" class="flex-1 glass-card hover:bg-white/5 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest transition-all">
                         Return to Terminal
                     </button>
-                    <button onclick="logout()"
-                        class="flex-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest transition-all">
+                    <button onclick="logout()" class="flex-1 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest transition-all">
                         Terminate Session
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div id="hud-notification" class="fixed bottom-10 left-1/2 -translate-x-1/2 translate-y-20 opacity-0 pointer-events-none transition-all duration-500 z-[100000]">
+        <div id="hud-card" class="glass-card px-8 py-3 rounded-full border border-emerald-500/30 flex items-center gap-4">
+            <div id="hud-dot" class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            <span id="hud-msg" class="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-400">System Ready</span>
         </div>
     </div>
 
     <script>
-// <script>
         async function fetchProfile() {
             const loader = document.getElementById("terminal-loader");
             const progressBar = document.getElementById("progress-bar");
@@ -214,7 +217,6 @@
 
             if (!token) { window.location.href = "/"; return; }
 
-            // Start Progress Animation
             setTimeout(() => progressBar.style.width = "40%", 100);
 
             try {
@@ -229,7 +231,6 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // Populate data
                     const name = data.username || "UNKNOWN USER";
                     document.getElementById("userName").innerText = name.toUpperCase();
                     document.getElementById("userInitials").innerText = name.substring(0, 2).toUpperCase();
@@ -240,10 +241,7 @@
                     const formattedId = String(rawId).padStart(4, '0');
                     document.getElementById("userId").innerText = `VT-${formattedId}`;
 
-                    // Data Loaded Successfully
                     progressBar.style.width = "100%";
-                    
-                    // Delay hiding loader slightly for "pro" feel
                     setTimeout(() => {
                         loader.style.opacity = "0";
                         setTimeout(() => loader.style.display = "none", 800);
@@ -255,23 +253,83 @@
             } catch (err) {
                 console.error("Uplink failed:", err);
                 document.getElementById("userName").innerText = "OFFLINE";
-                // Hide loader anyway so user can see error state
                 loader.style.display = "none";
             }
+        }
+
+        function toggleEditMode() {
+            const container = document.getElementById("nameContainer");
+            const editMode = document.getElementById("editMode");
+            const input = document.getElementById("nameInput");
+
+            if (editMode.classList.contains("hidden")) {
+                container.classList.add("hidden");
+                editMode.classList.remove("hidden");
+                input.value = document.getElementById("userName").innerText;
+                input.focus();
+            } else {
+                container.classList.remove("hidden");
+                editMode.classList.add("hidden");
+            }
+        }
+
+        async function submitNewName() {
+            const newName = document.getElementById("nameInput").value.trim();
+            const token = localStorage.getItem("token");
+
+            if (!newName || newName.length < 3) return showHUD("INVALID PARAMETERS", "error");
+
+            try {
+                const res = await fetch("/api/profile/update-username", {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username: newName })
+                });
+
+                if (res.ok) {
+                    document.getElementById("userName").innerText = newName.toUpperCase();
+                    document.getElementById("userInitials").innerText = newName.substring(0, 2).toUpperCase();
+                    toggleEditMode();
+                    showHUD("IDENTITY RE-VERIFIED");
+                } else {
+                    showHUD("ACCESS DENIED", "error");
+                }
+            } catch (err) {
+                showHUD("UPLINK FAILURE", "error");
+            }
+        }
+
+        function showHUD(msg, type = "success") {
+            const hud = document.getElementById("hud-notification");
+            const hudMsg = document.getElementById("hud-msg");
+            const hudCard = document.getElementById("hud-card");
+            const hudDot = document.getElementById("hud-dot");
+            
+            hudMsg.innerText = msg;
+            
+            if (type === "success") {
+                hudMsg.className = "text-[10px] font-black tracking-[0.3em] uppercase text-emerald-400";
+                hudCard.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                hudDot.className = "w-2 h-2 bg-emerald-500 rounded-full animate-pulse";
+            } else {
+                hudMsg.className = "text-[10px] font-black tracking-[0.3em] uppercase text-red-500";
+                hudCard.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                hudDot.className = "w-2 h-2 bg-red-500 rounded-full animate-pulse";
+            }
+
+            hud.classList.add("hud-active");
+
+            setTimeout(() => {
+                hud.classList.remove("hud-active");
+            }, 3000);
         }
 
         function logout() {
             localStorage.removeItem("token");
             window.location.href = "/";
-        }
-
-
-        window.onload = fetchProfile;
-
-
-        function logout() {
-            localStorage.removeItem("token");
-            window.location.reload();
         }
 
         window.onload = fetchProfile;
