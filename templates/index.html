@@ -392,6 +392,9 @@
                 placeholder="Search Asset..."
                 class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
 
+            <div id="suggestions" class="glass-card overflow-hidden"
+                style="display: none; position: absolute; z-index: 100001;"></div>
+
             <button onclick="openAuth()" id="loginBtn"
                 class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
 
@@ -509,47 +512,47 @@
             document.getElementById("authUsername").classList.toggle("hidden", isLogin);
         }
 
-async function submitAuth() {
-    const email = document.getElementById("authEmail").value;
-    const password = document.getElementById("authPassword").value;
-    const username = document.getElementById("authUsername").value;
-    const error = document.getElementById("authError");
-    
-    let url = isLogin 
-        ? `/auth/login?email=${email}&password=${password}` 
-        : `/auth/register?username=${username}&email=${email}&password=${password}`;
-        
-    document.getElementById('loader').classList.remove("hidden");
-    error.classList.add("hidden"); // Clear previous errors
+        async function submitAuth() {
+            const email = document.getElementById("authEmail").value;
+            const password = document.getElementById("authPassword").value;
+            const username = document.getElementById("authUsername").value;
+            const error = document.getElementById("authError");
 
-    try {
-        const res = await fetch(url, { method: "POST" });
-        const data = await res.json();
+            let url = isLogin
+                ? `/auth/login?email=${email}&password=${password}`
+                : `/auth/register?username=${username}&email=${email}&password=${password}`;
 
-        if (!res.ok) {
-            // This captures the 403 deactivation message from the backend
-            error.innerText = data.detail || "Authentication Failed";
-            error.classList.remove("hidden");
-            return; 
+            document.getElementById('loader').classList.remove("hidden");
+            error.classList.add("hidden"); // Clear previous errors
+
+            try {
+                const res = await fetch(url, { method: "POST" });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    // This captures the 403 deactivation message from the backend
+                    error.innerText = data.detail || "Authentication Failed";
+                    error.classList.remove("hidden");
+                    return;
+                }
+
+                if (isLogin) {
+                    localStorage.setItem("token", data.access_token);
+                    location.reload();
+                } else {
+                    error.innerText = "Success! Now Login.";
+                    error.classList.remove("hidden");
+                    toggleAuthMode();
+                }
+            } catch (e) {
+                error.innerText = "Uplink Error: Connection Terminated";
+                error.classList.remove("hidden");
+            } finally {
+                setTimeout(() => {
+                    document.getElementById('loader').classList.add("hidden");
+                }, 400);
+            }
         }
-
-        if (isLogin) {
-            localStorage.setItem("token", data.access_token);
-            location.reload();
-        } else {
-            error.innerText = "Success! Now Login.";
-            error.classList.remove("hidden");
-            toggleAuthMode();
-        }
-    } catch (e) {
-        error.innerText = "Uplink Error: Connection Terminated";
-        error.classList.remove("hidden");
-    } finally {
-        setTimeout(() => { 
-            document.getElementById('loader').classList.add("hidden"); 
-        }, 400);
-    }
-}
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
         function toggleSidebar() {
@@ -670,18 +673,42 @@ async function submitAuth() {
 
         async function handleSearch(q) {
             const box = document.getElementById('suggestions');
-            const rect = document.getElementById('tickerInput').getBoundingClientRect();
-            box.style.top = `${rect.bottom + window.scrollY + 8}px`; box.style.left = `${rect.left}px`; box.style.width = `${rect.width}px`;
-            const endpoint = q === '' ? '/api/context' : `/api/search/${q}`;
+            const input = document.getElementById('tickerInput');
+            const rect = input.getBoundingClientRect();
+
+            // Position the box
+            box.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            box.style.left = `${rect.left}px`;
+            box.style.width = `${rect.width}px`;
+
+            const endpoint = q.trim() === '' ? '/api/context' : `/api/search/${q}`;
+
             try {
                 const res = await fetch(endpoint);
                 const data = await res.json();
-                const list = q === '' ? data.trending : data;
-                if (list.length > 0) {
-                    box.innerHTML = list.map(i => `<div onclick="selectTicker('${i.symbol}')" class="p-4 hover:bg-white/5 cursor-pointer text-xs flex justify-between"><span><b class="text-emerald-400">${i.symbol}</b> - ${i.name}</span></div>`).join('');
+
+                // Handle both "trending" wrapper and direct array from search
+                const list = data.trending ? data.trending : data;
+
+                if (Array.isArray(list) && list.length > 0) {
+                    box.innerHTML = list.map(i => `
+                <div onclick="selectTicker('${i.symbol || i.s}')" 
+                     class="p-4 hover:bg-emerald-500/10 cursor-pointer text-xs flex justify-between border-b border-white/5 last:border-0">
+                    <span>
+                        <b class="text-emerald-400">${i.symbol || i.s}</b> 
+                        <span class="text-gray-400 ml-2">- ${i.name || i.n}</span>
+                    </span>
+                    <span class="text-[9px] text-gray-600 uppercase">Select</span>
+                </div>
+            `).join('');
                     box.style.display = 'block';
-                } else { box.style.display = 'none'; }
-            } catch { box.style.display = 'none'; }
+                } else {
+                    box.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Search Error:", err);
+                box.style.display = 'none';
+            }
         }
 
         function selectTicker(s, isSilent = false) { ticker = s; refreshData(isSilent); document.getElementById('suggestions').style.display = 'none'; }
