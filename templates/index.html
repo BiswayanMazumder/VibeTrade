@@ -156,6 +156,174 @@
                 filter: brightness(1.2);
             }
         }
+
+        /* Update your existing #sidebar CSS */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(40px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10000;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            /* Ultra smooth ease-out */
+            padding: 120px 2rem 2rem;
+            box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        /* Add this for the background fade */
+        .overlay-active {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        /* Advanced Hamburger UI */
+        .hamburger {
+            cursor: pointer;
+            display: none;
+            /* Controlled by JS flex toggle */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            width: 40px;
+            height: 40px;
+            z-index: 10001;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hamburger:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .hamburger div {
+            width: 20px;
+            height: 1.5px;
+            background-color: #fff;
+            transition: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            border-radius: 2px;
+        }
+
+        /* Animation when sidebar is open */
+        .hamburger.open {
+            border-color: #10b981;
+        }
+
+        .hamburger.open .line1 {
+            transform: translateY(7.5px) rotate(45deg);
+            width: 22px;
+            background-color: #10b981;
+        }
+
+        .hamburger.open .line2 {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .hamburger.open .line3 {
+            transform: translateY(-7.5px) rotate(-45deg);
+            width: 22px;
+            background-color: #10b981;
+        }
+
+        /* Entry Animation (Terminal Boot-up style) */
+        @keyframes menuEntry {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+                filter: blur(5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+                filter: blur(0);
+            }
+        }
+
+        .animate-menu-entry {
+            animation: menuEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Advanced Menu Item UI */
+        .menu-item {
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* The "Scanner" line that appears on hover */
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #10b981;
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 15px #10b981;
+        }
+
+        .menu-item:hover {
+            background: rgba(16, 185, 129, 0.05);
+            color: #fff;
+            padding-left: 2.2rem;
+            /* Slide text right */
+            border-color: rgba(16, 185, 129, 0.2);
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .menu-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        /* Subtle Glow Animation for Active/Hovered State */
+        @keyframes itemGlow {
+            0% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.3;
+            }
+        }
+
+        .menu-item:active {
+            transform: scale(0.98);
+            background: rgba(16, 185, 129, 0.15);
+        }
     </style>
 </head>
 
@@ -169,6 +337,19 @@
                 <div class="dot delay-1"></div>
                 <div class="dot delay-2"></div>
             </div>
+        </div>
+    </div>
+    <div id="sidebarOverlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] hidden opacity-0 transition-opacity duration-300">
+    </div>
+
+    <div id="sidebar" class="z-[10000]">
+        <div class="space-y-2">
+            <div class="menu-item">Dashboard</div>
+            <div class="menu-item">Portfolio</div>
+            <div class="menu-item">Watchlist</div>
+            <div class="menu-item">AI Strategy</div>
+            <div class="menu-item">Profile</div>
         </div>
     </div>
 
@@ -197,14 +378,23 @@
     </div>
 
     <header id="mainHeader" class="flex justify-between items-center">
-        <h1 class="text-2xl font-black italic uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
+        <div class="flex items-center gap-4">
+            <div id="hamburgerBtn" onclick="toggleSidebar()" class="hamburger hidden">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+            <h1 class="text-2xl font-black italic uppercase">VANT<span class="text-emerald-400">EDGE.</span></h1>
+        </div>
+
         <div class="flex items-center gap-6" id="searchContainer">
             <input id="tickerInput" oninput="handleSearch(this.value)" onfocus="handleSearch('')"
                 placeholder="Search Asset..."
                 class="w-80 bg-white/5 border border-white/10 rounded-2xl px-6 py-3 outline-none focus:border-emerald-500 font-bold uppercase text-xs">
-            <div id="suggestions"></div>
+
             <button onclick="openAuth()" id="loginBtn"
                 class="text-[10px] font-bold bg-white/5 border border-white/10 px-6 py-3 rounded-xl">Login</button>
+
             <button onclick="logout()" id="logoutBtn"
                 class="text-[10px] font-bold bg-red-500/10 text-red-400 px-6 py-3 rounded-xl hidden">Sign Out</button>
         </div>
@@ -311,7 +501,7 @@
     <script>
         let ticker = "AAPL", period = "1d", lastScroll = 0, isLogin = true;
         const synth = window.speechSynthesis;
-        
+
         function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
         function toggleAuthMode() {
             isLogin = !isLogin;
@@ -337,10 +527,71 @@
         }
 
         function logout() { localStorage.removeItem("token"); location.reload(); }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('hamburgerBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+            const items = document.querySelectorAll('.menu-item');
+
+            const isOpen = sidebar.classList.contains('open');
+
+            if (!isOpen) {
+                sidebar.classList.add('open');
+                btn.classList.add('open');
+                overlay.classList.add('overlay-active');
+                document.body.style.overflow = 'hidden';
+
+                // Staggered Entrance Animation for items
+                items.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        item.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateX(0)';
+                    }, 100 + (index * 50)); // 50ms delay between each item
+                });
+            } else {
+                sidebar.classList.remove('open');
+                btn.classList.remove('open');
+                overlay.classList.remove('overlay-active');
+                document.body.style.overflow = 'auto';
+
+                // Reset items for next time
+                items.forEach(item => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                });
+            }
+        }
+
+        // Update your existing updateAuthUI function
         function updateAuthUI() {
             const token = localStorage.getItem("token");
-            document.getElementById("loginBtn").classList.toggle("hidden", !!token);
-            document.getElementById("logoutBtn").classList.toggle("hidden", !token);
+            const loginBtn = document.getElementById("loginBtn");
+            const logoutBtn = document.getElementById("logoutBtn");
+            const hamburger = document.getElementById("hamburgerBtn");
+
+            loginBtn.classList.toggle("hidden", !!token);
+            logoutBtn.classList.toggle("hidden", !token);
+
+            if (token) {
+                // If it was hidden, apply the entrance animation
+                if (hamburger.classList.contains('hidden') || hamburger.style.display === 'none') {
+                    hamburger.classList.remove("hidden");
+                    hamburger.style.display = "flex";
+                    hamburger.classList.add("animate-menu-entry");
+
+                    // Remove the class after animation so hover transitions work normally
+                    setTimeout(() => {
+                        hamburger.classList.remove("animate-menu-entry");
+                    }, 600);
+                }
+            } else {
+                hamburger.classList.add("hidden");
+                hamburger.style.display = "none";
+                document.getElementById('sidebar').classList.remove('open');
+            }
         }
 
         // Modified refreshData to support silent updates
