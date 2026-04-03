@@ -324,6 +324,88 @@
             transform: scale(0.98);
             background: rgba(16, 185, 129, 0.15);
         }
+
+        /* ===== FAVORITE BUTTON NEXT-GEN ===== */
+        /* ===== FUTURISTIC MINI FAVORITE BUTTON ===== */
+        .fav-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        /* subtle glow layer */
+        .fav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(circle at center, rgba(16, 185, 129, 0.25), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        /* hover = smooth upscale */
+        .fav-btn:hover {
+            transform: translateY(-1px) scale(1.06);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .fav-btn:hover::before {
+            opacity: 1;
+        }
+
+        /* star base */
+        .star {
+            width: 14px;
+            height: 14px;
+            fill: transparent;
+            stroke: #777;
+            stroke-width: 2;
+            transition: all 0.35s ease;
+        }
+
+        /* ACTIVE STATE (clean neon fill) */
+        .fav-btn.active {
+            border-color: rgba(16, 185, 129, 0.6);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+        }
+
+        /* smooth fill animation */
+        .fav-btn.active .star {
+            fill: #10b981;
+            stroke: #10b981;
+            transform: scale(1.08);
+        }
+
+        /* subtle pulse instead of pop */
+        .fav-btn.active {
+            animation: softPulse 0.6s ease;
+        }
+
+        @keyframes softPulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 
@@ -415,6 +497,16 @@
                 </div>
                 <h2 id="priceDisplay" class="text-6xl font-extrabold italic tracking-tighter">0.00</h2>
                 <span id="changeDisplay" class="text-xl font-bold">0.00%</span>
+                <div id="favWrapper" class="hidden inline-flex ml-2">
+                    <div onclick="toggleFavorite()" id="favBtn" class="fav-btn">
+                        <svg viewBox="0 0 24 24" class="star">
+                            <path d="M12 17.27L18.18 21 16.54 13.97 
+                     22 9.24 14.81 8.63 12 2 
+                     9.19 8.63 2 9.24 7.46 13.97 
+                     5.82 21z" />
+                        </svg>
+                    </div>
+                </div>
 
                 <div class="flex gap-8 my-8 border-b border-white/5 pb-2 text-[11px] font-bold text-gray-500">
                     <button onclick="updateData('1d', this)" class="time-btn active-btn">1D</button>
@@ -502,16 +594,73 @@
     </div>
 
     <script>
-        let ticker = "AAPL", period = "1d", lastScroll = 0, isLogin = true;
+        let ticker = "TCS.NS", period = "1d", lastScroll = 0, isLogin = true;
         const synth = window.speechSynthesis;
+        async function addFavorite() {
+            const token = localStorage.getItem("token");
+            if (!token) return alert("Login required");
 
+            await fetch("/api/favorites/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ ticker })
+            });
+
+            loadFavorites();
+        }
         function openAuth() { document.getElementById("authModal").classList.remove("hidden"); }
         function toggleAuthMode() {
             isLogin = !isLogin;
             document.getElementById("authTitle").innerText = isLogin ? "LOGIN" : "REGISTER";
             document.getElementById("authUsername").classList.toggle("hidden", isLogin);
         }
+        let isFav = false;
 
+        let isAnimating = false;
+
+        async function toggleFavorite() {
+            if (isAnimating) return;
+
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const btn = document.getElementById("favBtn");
+            isAnimating = true;
+
+            try {
+                if (!isFav) {
+                    await fetch("/api/favorites/add", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": "Bearer " + token,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ ticker })
+                    });
+
+                    btn.classList.add("active");
+                    isFav = true;
+
+                } else {
+                    await fetch(`/api/favorites/remove/${ticker}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    });
+
+                    btn.classList.remove("active");
+                    isFav = false;
+                }
+            } catch (e) {
+                console.error("Fav error:", e);
+            }
+
+            setTimeout(() => isAnimating = false, 300);
+        }
         async function submitAuth() {
             const email = document.getElementById("authEmail").value;
             const password = document.getElementById("authPassword").value;
@@ -592,14 +741,33 @@
                 });
             }
         }
+        async function syncFavoriteState() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
 
+            const res = await fetch("/api/favorites", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            const data = await res.json();
+            const btn = document.getElementById("favBtn");
+
+            if (data.favorites.includes(ticker)) {
+                btn.classList.add("active");
+                isFav = true;
+            } else {
+                btn.classList.remove("active");
+                isFav = false;
+            }
+        }
         // Update your existing updateAuthUI function
         function updateAuthUI() {
             const token = localStorage.getItem("token");
             const loginBtn = document.getElementById("loginBtn");
             const logoutBtn = document.getElementById("logoutBtn");
             const hamburger = document.getElementById("hamburgerBtn");
-
+            const fav = document.getElementById("favWrapper");
+            fav.classList.toggle("hidden", !token);
             loginBtn.classList.toggle("hidden", !!token);
             logoutBtn.classList.toggle("hidden", !token);
 
@@ -624,6 +792,7 @@
 
         // Modified refreshData to support silent updates
         async function refreshData(isSilent = false) {
+            syncFavoriteState();
             if (!isSilent) document.getElementById('loader').classList.remove('hidden');
             try {
                 const res = await fetch(`/api/stream/${ticker}?period=${period}`);
@@ -763,6 +932,24 @@
                 if (ldr) { ldr.style.opacity = "0"; setTimeout(() => ldr.remove(), 500); }
             }, 800);
         };
+        async function loadFavorites() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const res = await fetch("/api/favorites", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            const data = await res.json();
+
+            const container = document.getElementById("favoritesList");
+            container.innerHTML = data.favorites.map(t => `
+        <div onclick="selectTicker('${t}')"
+             class="p-2 cursor-pointer hover:text-emerald-400">
+            ⭐ ${t}
+        </div>
+    `).join('');
+        }
     </script>
 </body>
 

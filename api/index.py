@@ -295,6 +295,68 @@ def send_security_alert(to_email: str, old_name: str, new_name: str, ip_address:
         """
     }
     requests.post(url, json=data, headers=headers)
+#Favourite stocks
+@app.post("/api/favorites/add")
+async def add_favorite(request: Request):
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split(" ")[1]
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id = payload.get("user_id")
+
+    data = await request.json()
+    ticker = data.get("ticker").upper()
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            INSERT INTO favorites (user_id, ticker)
+            VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
+        """, (user_id, ticker))
+        conn.commit()
+        return {"message": "Added"}
+    finally:
+        cur.close()
+        conn.close()
+@app.get("/api/favorites")
+async def get_favorites(request: Request):
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split(" ")[1]
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id = payload.get("user_id")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT ticker FROM favorites WHERE user_id=%s", (user_id,))
+        rows = cur.fetchall()
+        return {"favorites": [r[0] for r in rows]}
+    finally:
+        cur.close()
+        conn.close()
+@app.delete("/api/favorites/remove/{ticker}")
+async def remove_favorite(ticker: str, request: Request):
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split(" ")[1]
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id = payload.get("user_id")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            "DELETE FROM favorites WHERE user_id=%s AND ticker=%s",
+            (user_id, ticker.upper())
+        )
+        conn.commit()
+        return {"message": "Removed"}
+    finally:
+        cur.close()
+        conn.close()
 @app.put("/api/profile/update-username")
 async def update_username(request: Request, background_tasks: BackgroundTasks):
     # 1. Verify Token
