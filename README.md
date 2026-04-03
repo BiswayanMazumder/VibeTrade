@@ -34,5 +34,5 @@ Built with a focus on **Glassmorphism UI** and **Serverless Python**, Vantedge b
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/YourUsername/VibeTrade.git](https://github.com/YourUsername/VibeTrade.git)
+   git clone [https://github.com/BiswayanMazumder/VibeTrade.git](https://github.com/BiswayanMazumder/VibeTrade.git)
    cd VibeTrade
